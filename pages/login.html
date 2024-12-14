@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../playerGrid.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        <i data-lucide="moon" class="icon" id="moon"></i>
+        狼人杀 (Werewolf)
+      </h1>
+      <div class="player-inputs">
+        <input type="text" id="playerName" placeholder="Enter your name" />
+        <input type="text" placeholder="Enter Lobby ID" />
+        <button class="create-lobby" onclick="openLobbyConfig()">
+          <i data-lucide="users" class="icon"></i>
+          Create Lobby
+        </button>
+        <button class="join-room" onclick="handleJoinRoom()">
+          <i data-lucide="door-open" class="icon"></i>
+          Join Room
+        </button>
+      </div>
+    </div>
+    <div class="player-grid" id="mainPlayerGrid">
+      <!-- Player cards will be generated here -->
+    </div>
+
+    <script src="../login.js"></script>
+    <script src="../lobby.js"></script>
+  </body>
+</html>
