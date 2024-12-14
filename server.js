@@ -24,14 +24,28 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pages", "login.html"));
 });
 
+
+
+let gameInProgress = false;
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   socket.on("joinGame", (playerName) => {
-    console.log("Method called joinGame");
-    const player = new Player(playerName);
+    const playerRole = new Villager();
+    const player = new Player(playerName, playerRole);
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
+  });
+    
+  socket.on('startGame', () => {
+    if (!gameInProgress) {  // Prevent re-triggering game start
+        gameInProgress = true; // Set flag to indicate game has started
+        game.roles = [new Werewolf(), new Villager(), new Villager()]; // Example roles
+        game.assignRoles();
+        io.emit("updatePlayers", game.getCurrentPlayers());
+        game.startGame();
+      }
   });
 
   socket.on("disconnect", () => {

@@ -1,4 +1,5 @@
 let players = []; // Initialize an empty players array;
+let gameStarted = false;
 const mainPlayerGrid = document.getElementById("mainPlayerGrid");
 
 // Example players array for demonstration
@@ -9,13 +10,22 @@ const playersHardCoded = [
 ];
 
 socket.on('updatePlayers', (updatedPlayers) => {
-  console.log('updatePlayers called')
   players = updatedPlayers; // Update the players array
   renderPlayersGrid(); // Render the updated player grid
+
+  checkStartGame(); 
 });
+
+function checkStartGame() {
+  if (players.length == 3 && !gameStarted) {
+    gameStarted = true;
+    socket.emit('startGame');
+  }
+}
 
 function renderPlayersGrid() {
   // Render players in the main game screen
+  console.log(players); // Check if players array is populated
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
@@ -23,7 +33,7 @@ function renderPlayersGrid() {
     playerCard.innerHTML = `
           <i data-lucide="user"></i>
           <div class="player-name">${player.name}</div>
-          <div class="player-role">${player.role}</div>
+          <div class="player-role">${player.role.name}</div>
       `;
     mainPlayerGrid.appendChild(playerCard);
   });
@@ -54,5 +64,3 @@ function renderPlayersSmallGrid() {
   });
   lucide.createIcons();
 }
-
-// Call the render function
