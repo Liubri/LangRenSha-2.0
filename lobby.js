@@ -35,11 +35,18 @@ function checkStartGame() {
 
 function renderButtons() {
   const actionsDiv = document.getElementById("action-buttons");
-  actionsDiv.innerHTML = ""; 
-  
+  actionsDiv.innerHTML = "";
+
   if (currentPlayer.role.name === "Werewolf") {
     actionsDiv.innerHTML = `
           <button class="action-button kill">Kill</button>
+          <button class="action-button" id="openVoteModal">Vote</button>
+        `;
+  }
+  if (currentPlayer.role.name === "Witch") {
+    actionsDiv.innerHTML = `
+          <button class="action-button save">Save</button>
+          <button class="action-button poison">Poison</button>
           <button class="action-button" id="openVoteModal">Vote</button>
         `;
   }
@@ -59,8 +66,17 @@ function renderButtons() {
   if (killButton) {
     killButton.addEventListener("click", () => openModal("kill"));
   }
-}
 
+  const poisonButton = document.querySelector(".action-button.poison");
+  if (poisonButton) {
+    poisonButton.addEventListener("click", () => openModal("poison"));
+  }
+
+  const saveButton = document.querySelector(".action-button.save");
+  if (saveButton) {
+    saveButton.addEventListener("click", () => openModal("save"));
+  }
+}
 
 function renderPlayersGrid() {
   // Render players in the main game screen
@@ -80,7 +96,6 @@ function renderPlayersGrid() {
   });
   lucide.createIcons();
 }
-
 
 //This is for the modal
 const actionModal = document.getElementById("actionModal");
@@ -110,6 +125,10 @@ function openModal(action) {
       modalTitle.textContent = "Choose a Player to Poison";
       actionButton.textContent = "Use Poison Potion";
       break;
+    case "save":
+      modalTitle.textContent = "Choose a Player to Save";
+      actionButton.textContent = "Use Save Potion";
+      break;
   }
   adjustButtonSizes();
   renderPlayersSmallGrid();
@@ -120,10 +139,12 @@ function adjustButtonSizes() {
   const buttons = document.querySelectorAll(".modal .action-button");
 
   console.log("Buttons found:", buttons); // Log the buttons to see if they are selected
-  
+
   buttons.forEach((button) => {
     const wordCount = button.textContent.trim().split(/\s+/).length;
-    console.log(`Button text: "${button.textContent.trim()}", Word count: ${wordCount}`);
+    console.log(
+      `Button text: "${button.textContent.trim()}", Word count: ${wordCount}`
+    );
     if (wordCount === 1) {
       button.classList.add("large");
       console.log("Added 'large' class to button:", button);
@@ -133,7 +154,6 @@ function adjustButtonSizes() {
     }
   });
 }
-
 
 function closeModal() {
   actionModal.classList.remove("show");
@@ -172,16 +192,19 @@ function selectPlayer(playerId) {
 
 actionButton.addEventListener("click", () => {
   if (selectedPlayer) {
-    const selectedPlayerName = players.find((player) => player.id === selectedPlayer);
+    const { name } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
-        alert(`You voted for ${selectedPlayerName.name}`);
+        alert(`You voted for ${name}`);
         break;
       case "kill":
-        socket.emit('werewolfKill', selectedPlayerName.name);
+        socket.emit("werewolfKill", name);
         break;
       case "poison":
-        alert(`You used the poison potion on ${selectedPlayerName}`);
+        socket.emit("witchPoison", name);
+        break;
+      case "save":
+        socket.emit("witchSave", name);
         break;
     }
     closeModal();

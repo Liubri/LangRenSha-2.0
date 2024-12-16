@@ -6,6 +6,7 @@ import { Game } from "./Game.js"; // Use .js extension for local modules
 import { Player } from "./Player.js";
 import { Werewolf } from "./roles/Werewolf.js";
 import { Villager } from "./roles/Villager.js";
+import { Witch } from "./roles/Witch.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -25,7 +26,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Villager(), new Villager()];
+let availableRoles = [new Werewolf(), new Witch(), new Villager()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -74,6 +75,22 @@ io.on("connection", (socket) => {
       }
       io.emit("updatePlayers", game.getCurrentPlayers());
     }
+  });
+  
+  socket.on("witchSave", (targetName) => {
+    const target = game.getCurrentPlayers().find((player) => player.name === targetName);
+    if(target) {
+      target.isAlive = true;
+    }
+    io.emit("updatePlayers", game.getCurrentPlayers());
+  });
+  
+  socket.on("witchPoison", (targetName) => {
+    const target = game.getCurrentPlayers().find((player) => player.name === targetName && player.isAlive);
+    if(target) {
+      target.isAlive = false;
+    }
+    io.emit("updatePlayers", game.getCurrentPlayers());
   });
 
   socket.on("disconnect", () => {
