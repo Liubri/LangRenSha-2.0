@@ -6,7 +6,8 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../playerGrid.css" />
-    <title>Document</title>
+    <link rel="stylesheet" href="../modal.css">
+    <title>Werewolf</title>
   </head>
   <body>
     <div class="container">
@@ -27,7 +28,7 @@
         </button>
       </div>
     </div>
-    
+
     <!-- Create a Lobby-->
     <label for="lobbyType">Select Lobby Type:</label>
     <select id="lobbyType">
@@ -35,41 +36,44 @@
       <option value="custom">Custom Lobby</option>
     </select>
 
-    <div id="preconfiguredLobbies" style="display: none;">
+    <div id="preconfiguredLobbies" style="display: none">
       <label for="preconfiguredLobby">Choose a Preconfigured Lobby:</label>
       <select id="preconfiguredLobby">
-        <option value="basic">Basic: 4 Werewolves, 4 Villagers, 1 Seer, 1 Witch</option>
-        <option value="advanced">3 Werewolves, 1 狼美人, 4 Villagers, 1 Seer, 1 Witch</option>
+        <option value="basic">
+          Basic: 4 Werewolves, 4 Villagers, 1 Seer, 1 Witch
+        </option>
+        <option value="advanced">
+          3 Werewolves, 1 狼美人, 4 Villagers, 1 Seer, 1 Witch
+        </option>
         <!-- Add more preconfigured setups as needed -->
       </select>
     </div>
 
-    <div id="customLobby" style="display: none;">
+    <div id="customLobby" style="display: none">
       <h3>Custom Lobby Setup</h3>
       <label for="werewolvesCount">Number of Werewolves:</label>
       <input type="number" id="werewolvesCount" min="0" max="10" />
-      
+
       <label for="villagersCount">Number of Villagers:</label>
       <input type="number" id="villagersCount" min="0" max="10" />
-  
+
       <label for="seer">Include Seer:</label>
       <input type="checkbox" id="seer" />
-  
+
       <label for="witch">Include Witch:</label>
       <input type="checkbox" id="witch" />
-      
+
       <label for="wolfBeauty">Include 狼美人:</label>
       <input type="checkbox" id="wolfBeauty" />
-      
+
       <!-- Add more role configurations as necessary -->
     </div>
 
-    
     <!--Player Grid-->
     <div class="player-grid" id="mainPlayerGrid">
       <!-- Player cards will be generated here -->
     </div>
-    
+
     <!--Game Log and Action buttons-->
     <div class="game-info">
       <div class="card">
@@ -80,7 +84,7 @@
       </div>
       <div class="card">
         <h2>Actions</h2>
-        <div id ="action-buttons">
+        <div id="action-buttons">
           <button class="action-btn save">
             <i data-lucide="beaker" class="icon"></i> Save Potion
           </button>
@@ -92,48 +96,18 @@
       </div>
     </div>
 
+    <div class="modal" id="actionModal">
+      <h1 id="modalTitle">Action</h1>
+      <div class="players-grid" id="playersGrid"></div>
+      <button id="actionButton" class="action-button" disabled>
+        Confirm Action
+      </button>
+    </div>
+
     <script src="../login.js"></script>
     <script src="../lobby.js"></script>
     <script>
 
-
-
-
-      document.getElementById('lobbyType').addEventListener('change', function () {
-      const lobbyType = this.value;
-      if (lobbyType === 'preconfigured') {
-        document.getElementById('preconfiguredLobbies').style.display = 'block';
-        document.getElementById('customLobby').style.display = 'none';
-      } else {
-        document.getElementById('preconfiguredLobbies').style.display = 'none';
-        document.getElementById('customLobby').style.display = 'block';
-      }
-    });
-
-    function createLobby() {
-      const lobbyName = document.getElementById('lobbyName').value;
-      const lobbyType = document.getElementById('lobbyType').value;
-      let config;
-  
-      if (lobbyType === 'preconfigured') {
-        const preconfiguredLobby = document.getElementById('preconfiguredLobby').value;
-        config = { type: 'preconfigured', setup: preconfiguredLobby };
-      } else {
-        config = {
-          type: 'custom',
-          roles: {
-            werewolves: parseInt(document.getElementById('werewolvesCount').value),
-            villagers: parseInt(document.getElementById('villagersCount').value),
-            seer: document.getElementById('seer').checked,
-            witch: document.getElementById('witch').checked,
-            wolfBeauty: document.getElementById('wolfBeauty').checked
-            // Add other custom roles here
-          }
-        };
-      }
-  
-      socket.emit('createLobby', { lobbyName, config });
-    }
     </script>
   </body>
 </html>

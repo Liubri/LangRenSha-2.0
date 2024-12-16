@@ -1,5 +1,7 @@
 export class Player {
+  static nextId = 1;
   constructor(name, role) {
+    this.id = Player.nextId++;
     this.name = name;
     this.role = role;
     this.isAlive = true;

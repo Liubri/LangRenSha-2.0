@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    .modal .action-button.large {
+      padding: 20px 40px; /* Bigger shape for one-word buttons */
+      font-size: 1.2em;
+    }
+
+    .modal .action-button {
+      display: block;
+      margin: 0 auto;
+      padding: 10px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+  </style>
+  <body>
+    <div class="modal">
+      <button class="action-button kill hello">Kill</button>
+      <button class="action-button">Cast Vote</button>
+      <button class="action-button">Vote</button>
+    </div>
+  </body>
+  <script>
+    function adjustButtonSizes() {
+      const buttons = document.querySelectorAll(".modal .action-button"); // Selects all buttons with the action-button class
+
+      buttons.forEach((button) => {
+        const buttonText = button.textContent.trim(); // Get the button 
+        console.log(button);
+        const wordCount = buttonText.split(/\s+/).length; // Count words
+
+        if (wordCount === 1) {
+          button.classList.add("large"); // Add the large class if one word
+        } else {
+          button.classList.remove("large"); // Remove the large class otherwise
+        }
+      });
+    }
+    adjustButtonSizes();
+  </script>
+</html>
