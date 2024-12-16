@@ -172,14 +172,13 @@ function selectPlayer(playerId) {
 
 actionButton.addEventListener("click", () => {
   if (selectedPlayer) {
-    const selectedPlayerName = players.find(
-      (player) => player.id === selectedPlayer).name;
+    const selectedPlayerName = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
-        alert(`You voted for ${selectedPlayerName}`);
+        alert(`You voted for ${selectedPlayerName.name}`);
         break;
-      case "save":
-        alert(`You used the save potion on ${selectedPlayerName}`);
+      case "kill":
+        socket.emit('werewolfKill', selectedPlayerName.name);
         break;
       case "poison":
         alert(`You used the poison potion on ${selectedPlayerName}`);

@@ -12,8 +12,8 @@ const server = http.createServer(app);
 const io = new Server(server);
 const game = new Game();
 
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 // __dirname equivalent in ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -25,16 +25,16 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Villager(), new Villager()]; 
+let availableRoles = [new Werewolf(), new Villager(), new Villager()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
-      return undefined; // No roles left to assign
+    return undefined; // No roles left to assign
   }
   const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
   const role = availableRoles[randomIndex]; // Get the role
   availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
-  console.log('Available roles after assignment:', availableRoles);
+  console.log("Available roles after assignment:", availableRoles);
   return role; // Return the selected role
 }
 
@@ -48,15 +48,32 @@ io.on("connection", (socket) => {
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
     socket.emit("playerJoined", player);
   });
-    
-  socket.on('startGame', () => {
-    if (!gameInProgress) {  // Prevent re-triggering game start
-        console.log("Game Started!")
-        gameInProgress = true; // Set flag to indicate game has started
-        io.emit("updatePlayers", game.getCurrentPlayers());
-        game.startGame();
-        io.emit('renderButtons');
+
+  socket.on("startGame", () => {
+    if (!gameInProgress) {
+      // Prevent re-triggering game start
+      console.log("Game Started!");
+      gameInProgress = true; // Set flag to indicate game has started
+      io.emit("updatePlayers", game.getCurrentPlayers());
+      game.startGame();
+      io.emit("renderButtons");
+    }
+  });
+
+  socket.on("werewolfKill", (victimName) => {
+    console.log(`Werewolf has chosen to kill: ${victimName}`);
+    const victim = game.getCurrentPlayers().find(
+      (player) => player.name === victimName && player.isAlive
+    );
+    if (victim) {
+      victim.isAlive = false;
+      io.emit("message", `${victimName.name} has been killed by the werewolves.`);
+      const gameOver = game.checkGameOver();
+      if (!gameOver) {
+        game.nextAction();
       }
+      io.emit("updatePlayers", game.getCurrentPlayers());
+    }
   });
 
   socket.on("disconnect", () => {
