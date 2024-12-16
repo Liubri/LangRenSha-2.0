@@ -1,5 +1,6 @@
 let players = []; // Initialize an empty players array;
 let gameStarted = false;
+let currentPlayer = null;
 const mainPlayerGrid = document.getElementById("mainPlayerGrid");
 
 // Example players array for demonstration
@@ -10,16 +11,43 @@ const playersHardCoded = [
 ];
 
 socket.on('updatePlayers', (updatedPlayers) => {
+  console.log("Updated Players:", players); 
   players = updatedPlayers; // Update the players array
   renderPlayersGrid(); // Render the updated player grid
-
   checkStartGame(); 
+});
+
+socket.on('playerJoined', (player) => {
+  currentPlayer = player;
+});
+
+socket.on('renderButtons', () => {
+  console.log("Role assigned to current player:", currentPlayer);
+  renderButtons();
 });
 
 function checkStartGame() {
   if (players.length == 3 && !gameStarted) {
     gameStarted = true;
     socket.emit('startGame');
+  }
+}
+
+function renderButtons() {
+  const actionsDiv = document.getElementById('action-buttons');
+  actionsDiv.innerHTML = '';
+  if (currentPlayer.role.name === 'Werewolf') {
+    actionsDiv.innerHTML = `
+          <button class="action-btn save">
+            <i data-lucide="beaker" class="icon"></i> Kill 
+          </button>
+          <button class="action-btn" id="openVoteModal">Vote</button>
+        `;
+  }
+  if (currentPlayer.role.name === 'Villager') {
+    actionsDiv.innerHTML += `
+          <button class="action-btn" id="openVoteModal">Vote</button>
+        `;
   }
 }
 
@@ -33,8 +61,8 @@ function renderPlayersGrid() {
     playerCard.innerHTML = `
           <i data-lucide="user"></i>
           <div class="player-name">${player.name}</div>
-          <div class="player-role">${player.role.name}</div>
-      `;
+            <div class="player-role">${gameStarted ? player.role.name : "Role hidden"}</div>
+     `;
     mainPlayerGrid.appendChild(playerCard);
   });
   lucide.createIcons();

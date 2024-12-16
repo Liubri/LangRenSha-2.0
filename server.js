@@ -24,27 +24,38 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pages", "login.html"));
 });
 
-
-
 let gameInProgress = false;
+let availableRoles = [new Werewolf(), new Villager(), new Villager()]; 
+
+function assignRole() {
+  if (availableRoles.length === 0) {
+      return undefined; // No roles left to assign
+  }
+  const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
+  const role = availableRoles[randomIndex]; // Get the role
+  availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
+  console.log('Available roles after assignment:', availableRoles);
+  return role; // Return the selected role
+}
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
   socket.on("joinGame", (playerName) => {
-    const playerRole = new Villager();
+    const playerRole = assignRole();
     const player = new Player(playerName, playerRole);
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
+    socket.emit("playerJoined", player);
   });
     
   socket.on('startGame', () => {
     if (!gameInProgress) {  // Prevent re-triggering game start
+        console.log("Game Started!")
         gameInProgress = true; // Set flag to indicate game has started
-        game.roles = [new Werewolf(), new Villager(), new Villager()]; // Example roles
-        game.assignRoles();
         io.emit("updatePlayers", game.getCurrentPlayers());
         game.startGame();
+        io.emit('renderButtons');
       }
   });
 

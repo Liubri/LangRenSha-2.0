@@ -69,10 +69,36 @@
     <div class="player-grid" id="mainPlayerGrid">
       <!-- Player cards will be generated here -->
     </div>
+    
+    <!--Game Log and Action buttons-->
+    <div class="game-info">
+      <div class="card">
+        <h2>Game Log</h2>
+        <div class="game-log">
+          <p>The game has started. Night falls on the village...</p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Actions</h2>
+        <div id ="action-buttons">
+          <button class="action-btn save">
+            <i data-lucide="beaker" class="icon"></i> Save Potion
+          </button>
+          <button class="action-btn poison">
+            <i data-lucide="beaker" class="icon"></i> Poison Potion
+          </button>
+          <button class="action-btn" id="openVoteModal">Vote</button>
+        </div>
+      </div>
+    </div>
 
     <script src="../login.js"></script>
     <script src="../lobby.js"></script>
     <script>
+
+
+
+
       document.getElementById('lobbyType').addEventListener('change', function () {
       const lobbyType = this.value;
       if (lobbyType === 'preconfigured') {
