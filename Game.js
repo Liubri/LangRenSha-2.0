@@ -3,12 +3,23 @@ export class Game {
     this.players = [];
     this.roles = [];
     this.nightActions = [];
+    this.seerCheckedPlayers = [];
     this.logs = [];
     this.currentPhase = 'lobby'; // 'lobby', 'night', 'day'
   }
 
   addPlayer(player) {
     this.players.push(player);
+  }
+  
+  addSeerCheckedPlayer(playerName) {
+    if (!this.seerCheckedPlayers.includes(playerName)) {
+      this.seerCheckedPlayers.push(playerName);
+    }
+  }
+  
+  getSeerChecked() {
+    return this.seerCheckedPlayers;
   }
 
   assignRoles() {

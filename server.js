@@ -7,6 +7,7 @@ import { Player } from "./Player.js";
 import { Werewolf } from "./roles/Werewolf.js";
 import { Villager } from "./roles/Villager.js";
 import { Witch } from "./roles/Witch.js";
+import { Seer } from "./roles/Seer.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -26,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Witch(), new Villager()];
+let availableRoles = [new Werewolf(), new Witch(), new Seer()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -63,12 +64,15 @@ io.on("connection", (socket) => {
 
   socket.on("werewolfKill", (victimName) => {
     console.log(`Werewolf has chosen to kill: ${victimName}`);
-    const victim = game.getCurrentPlayers().find(
-      (player) => player.name === victimName && player.isAlive
-    );
+    const victim = game
+      .getCurrentPlayers()
+      .find((player) => player.name === victimName && player.isAlive);
     if (victim) {
       victim.isAlive = false;
-      io.emit("message", `${victimName.name} has been killed by the werewolves.`);
+      io.emit(
+        "message",
+        `${victimName.name} has been killed by the werewolves.`
+      );
       const gameOver = game.checkGameOver();
       if (!gameOver) {
         game.nextAction();
@@ -76,20 +80,36 @@ io.on("connection", (socket) => {
       io.emit("updatePlayers", game.getCurrentPlayers());
     }
   });
-  
+
   socket.on("witchSave", (targetName) => {
-    const target = game.getCurrentPlayers().find((player) => player.name === targetName);
-    if(target) {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.name === targetName);
+    if (target) {
       target.isAlive = true;
     }
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
-  
+
   socket.on("witchPoison", (targetName) => {
-    const target = game.getCurrentPlayers().find((player) => player.name === targetName && player.isAlive);
-    if(target) {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.name === targetName && player.isAlive);
+    if (target) {
       target.isAlive = false;
     }
+    io.emit("updatePlayers", game.getCurrentPlayers());
+  });
+
+  socket.on("seerAction", (targetName) => {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.name === targetName && player.isAlive);
+    if (target) {
+      game.addSeerCheckedPlayer(target.id);
+    }
+    console.log(game.getSeerChecked());
+    io.emit("updateSeerChecked", game.getSeerChecked());
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
 

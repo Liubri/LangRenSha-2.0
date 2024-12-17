@@ -1,4 +1,5 @@
 let players = []; // Initialize an empty players array;
+let seerCheckedPlayers = [];
 let gameStarted = false;
 let currentPlayer = null;
 const mainPlayerGrid = document.getElementById("mainPlayerGrid");
@@ -15,6 +16,10 @@ socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
   renderPlayersGrid(); // Render the updated player grid
   checkStartGame();
+});
+
+socket.on("updateSeerChecked", (checkedPlayers)=> {
+  seerCheckedPlayers = checkedPlayers;
 });
 
 socket.on("playerJoined", (player) => {
@@ -50,6 +55,12 @@ function renderButtons() {
           <button class="action-button" id="openVoteModal">Vote</button>
         `;
   }
+  if (currentPlayer.role.name === "Seer") {
+    actionsDiv.innerHTML = `
+    <button class="action-button check">Check</button>
+    <button class="action-button" id="openVoteModal">Vote</button>
+  `;
+  }
   if (currentPlayer.role.name === "Villager") {
     actionsDiv.innerHTML += `
           <button class="action-button" id="openVoteModal">Vote</button>
@@ -76,6 +87,10 @@ function renderButtons() {
   if (saveButton) {
     saveButton.addEventListener("click", () => openModal("save"));
   }
+  const checkButton = document.querySelector(".action-button.check");
+  if (checkButton) {
+    checkButton.addEventListener("click", () => openModal("check"));
+  }
 }
 
 function renderPlayersGrid() {
@@ -84,18 +99,69 @@ function renderPlayersGrid() {
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
-    playerCard.className = `player-card ${player.isAlive ? "" : "dead"}`;
+
+    // Add player status (alive or dead)
+    if (player.isAlive) {
+      playerCard.className = "player-card";
+    } else {
+      playerCard.className = "player-card dead";
+    }
+
+    // Determine player role visibility
+    let playerRole;
+    
+    // if(gameStarted && currentPlayer.role.name == "Seer") {
+    //   console.log("SeerChecked",seerCheckedPlayers);
+    //   if(seerCheckedPlayers.includes(player.id)) {
+    //     playerRole = player.role.name;
+    //   } else if(currentPlayer.id === player.id) {
+    //     playerRole = player.role.name;
+    //   } else {
+    //     playerRole = "";
+    //   } 
+    // }
+    // if (gameStarted && currentPlayer.id === player.id) {
+    //   playerRole = player.role.name;
+    // } else {
+    //   playerRole = "";
+    // }
+
+    // if(!gameStarted) {
+    //   playerRole = "Role Hidden";
+    // }
+    
+    if (gameStarted) {
+      if (currentPlayer.role.name === "Seer") {
+        console.log("SeerChecked", seerCheckedPlayers);
+        if (seerCheckedPlayers.includes(player.id)) {
+          playerRole = player.role.name; // Show the role of the checked player
+        } else if (currentPlayer.id === player.id) {
+          playerRole = player.role.name; // Show the current player's role
+        } else {
+          playerRole = ""; // Hide roles for others
+        }
+      } else if (currentPlayer.id === player.id) {
+        playerRole = player.role.name; // Show the current player's role if not Seer
+      } else {
+        playerRole = ""; // Hide roles for others when the game is started
+      }
+    } else {
+      playerRole = "Role hidden"; // Before the game starts, show "Role hidden"
+    }    
+    
+    // Set the innerHTML for the player card
     playerCard.innerHTML = `
           <i data-lucide="user"></i>
           <div class="player-name">${player.name}</div>
-            <div class="player-role">${
-              gameStarted ? player.role.name : "Role hidden"
-            }</div>
+          <div class="player-role">${playerRole}</div>
      `;
+
+    // Append the player card to the grid
     mainPlayerGrid.appendChild(playerCard);
   });
   lucide.createIcons();
 }
+
 
 //This is for the modal
 const actionModal = document.getElementById("actionModal");
@@ -128,6 +194,10 @@ function openModal(action) {
     case "save":
       modalTitle.textContent = "Choose a Player to Save";
       actionButton.textContent = "Use Save Potion";
+      break;
+    case "check":
+      modalTitle.textContent = "Choose a Player to Check";
+      actionButton.textContent = "Check ID";
       break;
   }
   adjustButtonSizes();
@@ -205,6 +275,9 @@ actionButton.addEventListener("click", () => {
         break;
       case "save":
         socket.emit("witchSave", name);
+        break;
+      case "check":
+        socket.emit("seerAction", name);
         break;
     }
     closeModal();
