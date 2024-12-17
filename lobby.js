@@ -18,7 +18,7 @@ socket.on("updatePlayers", (updatedPlayers) => {
   checkStartGame();
 });
 
-socket.on("updateSeerChecked", (checkedPlayers)=> {
+socket.on("updateSeerChecked", (checkedPlayers) => {
   seerCheckedPlayers = checkedPlayers;
 });
 
@@ -109,7 +109,7 @@ function renderPlayersGrid() {
 
     // Determine player role visibility
     let playerRole;
-    
+
     // if(gameStarted && currentPlayer.role.name == "Seer") {
     //   console.log("SeerChecked",seerCheckedPlayers);
     //   if(seerCheckedPlayers.includes(player.id)) {
@@ -118,7 +118,7 @@ function renderPlayersGrid() {
     //     playerRole = player.role.name;
     //   } else {
     //     playerRole = "";
-    //   } 
+    //   }
     // }
     // if (gameStarted && currentPlayer.id === player.id) {
     //   playerRole = player.role.name;
@@ -129,7 +129,7 @@ function renderPlayersGrid() {
     // if(!gameStarted) {
     //   playerRole = "Role Hidden";
     // }
-    
+
     if (gameStarted) {
       if (currentPlayer.role.name === "Seer") {
         console.log("SeerChecked", seerCheckedPlayers);
@@ -147,8 +147,8 @@ function renderPlayersGrid() {
       }
     } else {
       playerRole = "Role hidden"; // Before the game starts, show "Role hidden"
-    }    
-    
+    }
+
     // Set the innerHTML for the player card
     playerCard.innerHTML = `
           <i data-lucide="user"></i>
@@ -161,7 +161,6 @@ function renderPlayersGrid() {
   });
   lucide.createIcons();
 }
-
 
 //This is for the modal
 const actionModal = document.getElementById("actionModal");
@@ -229,6 +228,12 @@ function closeModal() {
   actionModal.classList.remove("show");
 }
 
+let werewolfTarget = null;
+socket.on("updateWerewolfTarget", (targetId) => {
+  werewolfTarget = targetId;
+  renderPlayersSmallGrid();
+});
+
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
   players.forEach((player) => {
@@ -246,6 +251,13 @@ function renderPlayersSmallGrid() {
           ? '<i data-lucide="check" class="check-icon"></i>'
           : ""
       }`;
+    if (
+      currentPlayer.role.name === "Werewolf" &&
+      player.id === werewolfTarget
+    ) {
+      playerElement.classList.add("targeted"); // Add the 'targeted' class
+    }
+
     playerElement.addEventListener("click", () => {
       selectPlayer(player.id);
     });
@@ -256,8 +268,12 @@ function renderPlayersSmallGrid() {
 
 function selectPlayer(playerId) {
   selectedPlayer = playerId;
+  const { id } = players.find((player) => player.id === selectedPlayer);
   renderPlayersSmallGrid();
   actionButton.disabled = false;
+  if(currentPlayer.role.name === "Werewolf") {
+    socket.emit("werewolfTarget", id);
+  }
 }
 
 actionButton.addEventListener("click", () => {
@@ -268,7 +284,6 @@ actionButton.addEventListener("click", () => {
         alert(`You voted for ${name}`);
         break;
       case "kill":
-        socket.emit("werewolfKill", name);
         break;
       case "poison":
         socket.emit("witchPoison", name);

@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Witch(), new Seer()];
+let availableRoles = [new Werewolf(), new Werewolf(), new Seer()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -112,6 +112,13 @@ io.on("connection", (socket) => {
     io.emit("updateSeerChecked", game.getSeerChecked());
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
+  
+  let werewolfTarget = null;
+  socket.on("werewolfTarget", (playerId) => {
+    werewolfTarget = playerId;
+    socket.broadcast.emit("updateWerewolfTarget", playerId);
+  });
+
 
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);

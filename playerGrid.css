@@ -60,3 +60,22 @@
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
+
+
+.player.targeted {
+  background-color: #f97316; /* Orange background for target */
+  border: 3px solid #ea580c; /* Darker orange border */
+  animation: pulse 1.5s infinite; /* Optional pulse animation */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
