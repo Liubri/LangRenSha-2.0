@@ -61,21 +61,27 @@
   margin-top: 0.25rem;
 }
 
-
-.player.targeted {
+.player.targeted-1 {
   background-color: #f97316; /* Orange background for target */
   border: 3px solid #ea580c; /* Darker orange border */
-  animation: pulse 1.5s infinite; /* Optional pulse animation */
 }
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+.player.targeted-2 {
+  background-color: #27cfdb;
+  border: 3px solid #27cfdb;
+}
+
+.player.targeted-3 {
+  background-color: #84cc16; /* Green */
+  border: 3px solid #65a30d;
+}
+
+.player.targeted-4 {
+  background-color: #e11d48; /* Red */
+  border: 3px solid #be123c;
+}
+
+.player.targeted-5 {
+  background-color: #a855f7; /* Purple */
+  border: 3px solid #9333ea;
 }

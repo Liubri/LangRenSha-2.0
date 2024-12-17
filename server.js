@@ -113,10 +113,10 @@ io.on("connection", (socket) => {
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
   
-  let werewolfTarget = null;
-  socket.on("werewolfTarget", (playerId) => {
-    werewolfTarget = playerId;
-    socket.broadcast.emit("updateWerewolfTarget", playerId);
+  let werewolfSelections = {};
+  socket.on("werewolfTarget", ({werewolfId, targetId}) => {
+    werewolfSelections[werewolfId] = targetId;
+    socket.broadcast.emit("updateWerewolfTarget", werewolfSelections);
   });
 
 

@@ -228,11 +228,21 @@ function closeModal() {
   actionModal.classList.remove("show");
 }
 
-let werewolfTarget = null;
-socket.on("updateWerewolfTarget", (targetId) => {
-  werewolfTarget = targetId;
+let werewolfSelections = {};
+socket.on("updateWerewolfTarget", (selections) => {
+  werewolfSelections = selections;
+  console.log("WerewolfSelections: ", werewolfSelections);
   renderPlayersSmallGrid();
 });
+
+const werewolfColors = ["#f97316", "#3b82f6", "#84cc16", "#e11d48", "#a855f7"]; // Orange, Blue, Green, Red, Purple
+
+function getWerewolfColor(werewolfId) {
+  const werewolfIds = Object.keys(werewolfSelections);
+  const index = werewolfIds.indexOf(werewolfId);
+  return werewolfColors[index % werewolfColors.length]; // Cycle through colors
+}
+
 
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
@@ -251,12 +261,15 @@ function renderPlayersSmallGrid() {
           ? '<i data-lucide="check" class="check-icon"></i>'
           : ""
       }`;
-    if (
-      currentPlayer.role.name === "Werewolf" &&
-      player.id === werewolfTarget
-    ) {
-      playerElement.classList.add("targeted"); // Add the 'targeted' class
-    }
+      Object.entries(werewolfSelections).forEach(([werewolfId, targetId]) => {
+        if (player.id === targetId) {
+          playerElement.classList.add(`targeted-${werewolfId}`); // Dynamic color class
+          console.log("Add CSS called");
+          console.log(`Added class targeted-${werewolfId} to player ${player.name}`);
+        }
+      });
+      //playerElement.classList.add("targeted"); // Add the 'targeted' class
+    
 
     playerElement.addEventListener("click", () => {
       selectPlayer(player.id);
@@ -269,10 +282,13 @@ function renderPlayersSmallGrid() {
 function selectPlayer(playerId) {
   selectedPlayer = playerId;
   const { id } = players.find((player) => player.id === selectedPlayer);
+  const werewolfId = currentPlayer.id;
+  console.log("WerewolfID: ", werewolfId);
+  console.log("SelectedPlayer: ", id);
   renderPlayersSmallGrid();
   actionButton.disabled = false;
   if(currentPlayer.role.name === "Werewolf") {
-    socket.emit("werewolfTarget", id);
+    socket.emit("werewolfTarget", {werewolfId: werewolfId, targetId: id});
   }
 }
 
