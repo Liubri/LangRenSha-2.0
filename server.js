@@ -62,24 +62,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("werewolfKill", (victimName) => {
-    console.log(`Werewolf has chosen to kill: ${victimName}`);
-    const victim = game
-      .getCurrentPlayers()
-      .find((player) => player.name === victimName && player.isAlive);
-    if (victim) {
-      victim.isAlive = false;
-      io.emit(
-        "message",
-        `${victimName.name} has been killed by the werewolves.`
-      );
-      const gameOver = game.checkGameOver();
-      if (!gameOver) {
-        game.nextAction();
-      }
-      io.emit("updatePlayers", game.getCurrentPlayers());
-    }
-  });
+  // socket.on("werewolfKill", (victimName) => {
+  //   console.log(`Werewolf has chosen to kill: ${victimName}`);
+  //   const victim = game
+  //     .getCurrentPlayers()
+  //     .find((player) => player.name === victimName && player.isAlive);
+  //   if (victim && game.getCurrentTurn() == "werewolf") {
+  //     victim.isAlive = false;
+  //     io.emit(
+  //       "message",
+  //       `${victimName.name} has been killed by the werewolves.`
+  //     );
+  //     //const gameOver = game.checkGameOver();
+  //     //if (!gameOver) {
+  //     //  game.nextTurn();
+  //     //  io.emit("updateCurrentTurn", game.getCurrentTurn());
+  //     //  console.log(game.getCurrentTurn());
+  //     //}
+  //     game.nextTurn();
+  //     io.emit("updateCurrentTurn", game.getCurrentTurn());
+  //     console.log(game.getCurrentTurn());
+  //     io.emit("updatePlayers", game.getCurrentPlayers());
+  //   }
+  // });
 
   socket.on("witchSave", (targetName) => {
     const target = game
@@ -112,13 +117,27 @@ io.on("connection", (socket) => {
     io.emit("updateSeerChecked", game.getSeerChecked());
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
-  
+
   let werewolfSelections = {};
-  socket.on("werewolfTarget", ({werewolfId, targetId}) => {
+  socket.on("werewolfTarget", ({ werewolfId, targetId }) => {
     werewolfSelections[werewolfId] = targetId;
     socket.broadcast.emit("updateWerewolfTarget", werewolfSelections);
   });
 
+  socket.on("werewolfKill", (targetId) => {
+    game.addWerewolfChoice(targetId);
+    console.log("wolfChoice: ", game.getWolfChoice());
+    const target = game
+      .getCurrentPlayers()
+      .find(
+        (player) => player.id === game.tallyWerewolfChoice() && player.isAlive
+      );
+    console.log("Target: ", target);
+    if (game.getWolfChoice().length === game.getWerewolves().length) {
+      target.kill();
+      io.emit("updatePlayers", game.getCurrentPlayers());
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);

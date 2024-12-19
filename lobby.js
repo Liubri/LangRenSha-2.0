@@ -38,6 +38,16 @@ function checkStartGame() {
   }
 }
 
+socket.on("updateCurrentTurn", (currentTurn) => {
+  const killButton = document.querySelector(".action-button.kill");
+  console.log(currentTurn);
+  if(currentTurn !== "werewolf") {
+    killButton.disabled = true;  
+  } else {
+    killButton.disabled = false;
+  }
+});
+
 function renderButtons() {
   const actionsDiv = document.getElementById("action-buttons");
   actionsDiv.innerHTML = "";
@@ -95,7 +105,7 @@ function renderButtons() {
 
 function renderPlayersGrid() {
   // Render players in the main game screen
-  console.log(players); // Check if players array is populated
+  //console.log(players); // Check if players array is populated
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
@@ -172,7 +182,7 @@ let currentAction = null;
 let selectedPlayer = null;
 
 function openModal(action) {
-  console.log("Opened Modal");
+  //console.log("Opened Modal");
   currentAction = action;
   selectedPlayer = null;
   actionButton.disabled = true;
@@ -207,19 +217,19 @@ function openModal(action) {
 function adjustButtonSizes() {
   const buttons = document.querySelectorAll(".modal .action-button");
 
-  console.log("Buttons found:", buttons); // Log the buttons to see if they are selected
+  //console.log("Buttons found:", buttons); // Log the buttons to see if they are selected
 
   buttons.forEach((button) => {
     const wordCount = button.textContent.trim().split(/\s+/).length;
-    console.log(
-      `Button text: "${button.textContent.trim()}", Word count: ${wordCount}`
-    );
+    //console.log(
+    //  `Button text: "${button.textContent.trim()}", Word count: ${wordCount}`
+    //);
     if (wordCount === 1) {
       button.classList.add("large");
-      console.log("Added 'large' class to button:", button);
+      //console.log("Added 'large' class to button:", button);
     } else {
       button.classList.remove("large");
-      console.log("Removed 'large' class from button:", button);
+      //console.log("Removed 'large' class from button:", button);
     }
   });
 }
@@ -289,11 +299,13 @@ function selectPlayer(playerId) {
 actionButton.addEventListener("click", () => {
   if (selectedPlayer) {
     const { name } = players.find((player) => player.id === selectedPlayer);
+    const { id } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
         alert(`You voted for ${name}`);
         break;
       case "kill":
+        socket.emit("werewolfKill", id);
         break;
       case "poison":
         socket.emit("witchPoison", name);
