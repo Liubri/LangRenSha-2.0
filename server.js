@@ -186,8 +186,8 @@ io.on("connection", (socket) => {
           .find((player) => player.id === game.countVotes() && player.isAlive);
         target.kill();
         game.nextTurn();
-        io.emit("updateCurrentTurn", game.getCurrentTurn());
         io.emit("updatePlayers", game.getCurrentPlayers());
+        io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
     }
   });

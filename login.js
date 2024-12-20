@@ -12,7 +12,6 @@ function handleJoinRoom() {
   if (playerInputs) {
     playerInputs.style.display = "none";
   }
-
   // Create a player object
   //const player = { id: 1, name: playerName, role: "Villager", isAlive: true };
 

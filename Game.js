@@ -1,7 +1,6 @@
 export class Game {
   constructor() {
     this.players = [];
-    this.roles = [];
     this.nightActions = [];
     this.seerCheckedPlayers = [];
     this.playerVotes = [];
@@ -35,14 +34,6 @@ export class Game {
 
   getSeerChecked() {
     return this.seerCheckedPlayers;
-  }
-
-  assignRoles() {
-    // Shuffle roles and assign them to players
-    const shuffledRoles = this.roles.sort(() => Math.random() - 0.5);
-    this.players.forEach((player, index) => {
-      player.assignRole(shuffledRoles[index]);
-    });
   }
 
   startGame() {

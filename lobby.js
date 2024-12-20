@@ -11,11 +11,15 @@ const playersHardCoded = [
   { id: 2, name: "Player 2", role: "Villager", isAlive: true },
   // Add more players as needed
 ];
-
+// players = playersHardCoded;
+// renderPlayersGrid();
 socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
   console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
+  if(gameStarted) {
+    checkIfAlive();
+  }
   //checkStartGame();
 });
 
@@ -41,6 +45,16 @@ socket.on("startGame", () => {
   gameStarted = true;
 });
 
+function checkIfAlive() {
+  const currentPlayerInList = players.find(player => player.id === currentPlayer.id);
+  if (currentPlayerInList) {
+    if (!currentPlayerInList.isAlive) {
+        currentPlayer.isAlive = false; // Update currentPlayer status
+        console.log(`${currentPlayer.name} is now dead.`);
+    }
+  }
+}
+
 // function checkStartGame() {
 //   if (players.length == 3 && !gameStarted) {
 //     gameStarted = true;
@@ -59,38 +73,58 @@ function isActionAllowed(role, currentTurn) {
   return role === currentTurn;
 }
 
+function checkPlayerAlive() {
+  if(currentPlayer.isAlive == false) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 function renderButtons() {
   const actionsDiv = document.getElementById("action-buttons");
   actionsDiv.innerHTML = "";
+
+  // Check if the current player is alive
+  const isPlayerAlive = currentPlayer && currentPlayer.isAlive;
 
   const createButton = (text, className, action, isEnabled) => {
     const button = document.createElement("button");
     button.textContent = text;
     button.className = `action-button ${className}`;
-    button.disabled = !isEnabled; // Enable or disable the button
+    button.disabled = !isEnabled; // Disable or enable the button
     button.addEventListener("click", () => openModal(action));
     return button;
   };
 
   const isVotingPhase = currentTurn === "vote";
 
-  if (currentPlayer.role.name === "Werewolf") {
-    actionsDiv.appendChild(createButton("Kill", "kill", "kill", currentTurn === "werewolf"));
-    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
-  }
-  if (currentPlayer.role.name === "Witch") {
-    actionsDiv.appendChild(createButton("Save", "save", "save", currentTurn === "witch"));
-    actionsDiv.appendChild(createButton("Poison", "poison", "poison", currentTurn === "witch"));
-    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
-  }
-  if (currentPlayer.role.name === "Seer") {
-    actionsDiv.appendChild(createButton("Check", "check", "check", currentTurn === "seer"));
-    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
-  }
-  if (currentPlayer.role.name === "Villager") {
-    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+  // Only render buttons if the player is alive
+  if (isPlayerAlive) {
+    if (currentPlayer.role.name === "Werewolf") {
+      actionsDiv.appendChild(createButton("Kill", "kill", "kill", currentTurn === "werewolf"));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+    }
+    if (currentPlayer.role.name === "Witch") {
+      actionsDiv.appendChild(createButton("Save", "save", "save", currentTurn === "witch"));
+      actionsDiv.appendChild(createButton("Poison", "poison", "poison", currentTurn === "witch"));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+    }
+    if (currentPlayer.role.name === "Seer") {
+      actionsDiv.appendChild(createButton("Check", "check", "check", currentTurn === "seer"));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+    }
+    if (currentPlayer.role.name === "Villager") {
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+    }
+  } else {
+    // If the player is dead, disable all action buttons
+    const deadMessage = document.createElement("p");
+    deadMessage.textContent = "You are dead and cannot perform any actions.";
+    actionsDiv.appendChild(deadMessage);
   }
 }
+
 
 
 
@@ -145,12 +179,12 @@ function renderPlayersGrid() {
         wolfVictimId.includes(player.id) &&
         currentTurn === "witch"
       ) {
-        console.log("Main WitchCSS called");
+        //console.log("Main WitchCSS called");
         playerCard.classList.add("pulse-animation");
         this.wolfVictimId = [];
       } else {
-        console.log("WitchCurrentTurn:", currentTurn);
-        console.log("Remove animationMain called");
+        //console.log("WitchCurrentTurn:", currentTurn);
+        //console.log("Remove animationMain called");
         playerCard.classList.remove("pulse-animation");
       }
     }
@@ -271,11 +305,11 @@ function renderPlayersSmallGrid() {
       });
     }
     if (wolfVictimId.includes(player.id) && currentAction === "save") {
-      console.log("Witch CSS called");
+      //console.log("Witch CSS called");
       playerElement.classList.add("pulse-animation");
       this.wolfVictimId = [];
     } else {
-      console.log("Remove animation called");
+      //console.log("Remove animation called");
       playerElement.classList.remove("pulse-animation");
     }
     playerElement.addEventListener("click", () => {
