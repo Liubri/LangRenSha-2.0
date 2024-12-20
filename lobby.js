@@ -2,6 +2,7 @@ let players = []; // Initialize an empty players array;
 let seerCheckedPlayers = [];
 let gameStarted = false;
 let currentPlayer = null;
+let currentTurn = "";
 const mainPlayerGrid = document.getElementById("mainPlayerGrid");
 
 // Example players array for demonstration
@@ -16,6 +17,10 @@ socket.on("updatePlayers", (updatedPlayers) => {
   console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
   checkStartGame();
+});
+
+socket.on("updateGrid", () => {
+  renderPlayersGrid();
 });
 
 socket.on("updateSeerChecked", (checkedPlayers) => {
@@ -39,12 +44,16 @@ function checkStartGame() {
 }
 
 socket.on("updateCurrentTurn", (currentTurn) => {
+  this.currentTurn = currentTurn;
+  console.log("CurrentTurn:", this.currentTurn);
+  console.log("CurrentPlayer:", this.currentPlayer);
   const killButton = document.querySelector(".action-button.kill");
-  console.log(currentTurn);
-  if(currentTurn !== "werewolf") {
-    killButton.disabled = true;  
-  } else {
-    killButton.disabled = false;
+  if (killButton) {
+    if (this.currentTurn !== "werewolf") {
+      killButton.disabled = true;
+    } else {
+      killButton.disabled = false;
+    }
   }
 });
 
@@ -119,32 +128,11 @@ function renderPlayersGrid() {
 
     // Determine player role visibility
     let playerRole;
-
-    // if(gameStarted && currentPlayer.role.name == "Seer") {
-    //   console.log("SeerChecked",seerCheckedPlayers);
-    //   if(seerCheckedPlayers.includes(player.id)) {
-    //     playerRole = player.role.name;
-    //   } else if(currentPlayer.id === player.id) {
-    //     playerRole = player.role.name;
-    //   } else {
-    //     playerRole = "";
-    //   }
-    // }
-    // if (gameStarted && currentPlayer.id === player.id) {
-    //   playerRole = player.role.name;
-    // } else {
-    //   playerRole = "";
-    // }
-
-    // if(!gameStarted) {
-    //   playerRole = "Role Hidden";
-    // }
-
     if (gameStarted) {
       if (currentPlayer.role.name === "Seer") {
         console.log("SeerChecked", seerCheckedPlayers);
         if (seerCheckedPlayers.includes(player.id)) {
-          if(player.role.alignment === "good") {
+          if (player.role.alignment === "good") {
             playerRole = "Good";
           } else {
             playerRole = "Bad";
@@ -169,7 +157,21 @@ function renderPlayersGrid() {
           <div class="player-name">${player.name}</div>
           <div class="player-role">${playerRole}</div>
      `;
-
+    if (gameStarted) {
+      if (
+        currentPlayer.role.name === "Witch" &&
+        wolfVictimId.includes(player.id) &&
+        this.currentTurn === "witch"
+      ) {
+        console.log("Main WitchCSS called");
+        playerCard.classList.add("pulse-animation");
+        this.wolfVictimId = [];
+      } else {
+        console.log("WitchCurrentTurn:", this.currentTurn);
+        console.log("Remove animationMain called");
+        playerCard.classList.remove("pulse-animation");
+      }
+    }
     // Append the player card to the grid
     mainPlayerGrid.appendChild(playerCard);
   });
@@ -253,6 +255,13 @@ function getWerewolfColor(werewolfId) {
   return werewolfColors[werewolfId]; // Cycle through colors
 }
 
+let wolfVictimId = [];
+socket.on("notifyKilled", (wolfChoice) => {
+  console.log("NotifyCalled");
+  wolfVictimId = wolfChoice;
+  console.log("Wolf Victim", wolfVictimId);
+  renderPlayersSmallGrid();
+});
 
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
@@ -271,7 +280,7 @@ function renderPlayersSmallGrid() {
           ? '<i data-lucide="check" class="check-icon"></i>'
           : ""
       }`;
-    if(currentPlayer.role.name === "Werewolf") {
+    if (currentPlayer.role.name === "Werewolf" && currentAction === "kill") {
       Object.entries(werewolfSelections).forEach(([werewolfId, targetId]) => {
         if (player.id === targetId) {
           const color = getWerewolfColor(werewolfId);
@@ -279,7 +288,14 @@ function renderPlayersSmallGrid() {
         }
       });
     }
-      //playerElement.classList.add("targeted"); // Add the 'targeted' class
+    if (wolfVictimId.includes(player.id) && currentAction === "save") {
+      console.log("Witch CSS called");
+      playerElement.classList.add("pulse-animation");
+      this.wolfVictimId = [];
+    } else {
+      console.log("Remove animation called");
+      playerElement.classList.remove("pulse-animation");
+    }
     playerElement.addEventListener("click", () => {
       selectPlayer(player.id);
     });
@@ -294,8 +310,8 @@ function selectPlayer(playerId) {
   const werewolfId = currentPlayer.id;
   renderPlayersSmallGrid();
   actionButton.disabled = false;
-  if(currentPlayer.role.name === "Werewolf") {
-    socket.emit("werewolfTarget", {werewolfId: werewolfId, targetId: id});
+  if (currentPlayer.role.name === "Werewolf") {
+    socket.emit("werewolfTarget", { werewolfId: werewolfId, targetId: id });
   }
 }
 
@@ -310,15 +326,16 @@ actionButton.addEventListener("click", () => {
         socket.emit("werewolfKill", id);
         break;
       case "poison":
-        socket.emit("witchAction", {actionType: "poison", targetId: id});
+        socket.emit("witchAction", { actionType: "poison", targetId: id });
         break;
       case "save":
-        socket.emit("witchAction", {actionType: "save", targetId: id});
+        socket.emit("witchAction", { actionType: "save", targetId: id });
         break;
       case "check":
         socket.emit("seerAction", id);
         break;
     }
+    this.currentAction = null;
     closeModal();
   }
 });

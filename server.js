@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Seer(), new Werewolf()];
+let availableRoles = [new Witch(), new Seer(), new Werewolf()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -59,6 +59,7 @@ io.on("connection", (socket) => {
       gameInProgress = true; // Set flag to indicate game has started
       io.emit("updatePlayers", game.getCurrentPlayers());
       game.startGame();
+      io.emit("updateCurrentTurn", game.getCurrentTurn());
       io.emit("renderButtons");
     }
   });
@@ -99,6 +100,8 @@ io.on("connection", (socket) => {
         target.kill();
       }
     }
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
 
@@ -122,15 +125,17 @@ io.on("connection", (socket) => {
 
   socket.on("werewolfKill", (targetId) => {
     game.addWerewolfChoice(targetId);
-    console.log("wolfChoice: ", game.getWolfChoice());
     const target = game
       .getCurrentPlayers()
       .find(
         (player) => player.id === game.tallyWerewolfChoice() && player.isAlive
       );
-    console.log("Target: ", target);
     if (game.getWolfChoice().length === game.getWerewolves().length) {
-      target.kill();
+      io.emit("notifyKilled", game.getWolfChoice());
+      target.isAlive = false;
+      game.clearWolfChoice();
+      game.nextTurn();
+      io.emit("updateCurrentTurn", game.getCurrentTurn());
       io.emit("updatePlayers", game.getCurrentPlayers());
     }
   });

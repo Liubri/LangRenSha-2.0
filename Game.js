@@ -48,7 +48,6 @@ export class Game {
   startGame() {
     this.currentPhase = "night";
     this.logs.push("Game started");
-    this.turnSequence[this.currentTurnIndex];
   }
 
   performNightActions() {
@@ -117,6 +116,10 @@ export class Game {
   
   addWerewolfChoice(int) {
     this.werewolvesChoice.push(int);
+  }
+  
+  clearWolfChoice() {
+    this.werewolvesChoice = [];
   }
 
   countVotes() {
