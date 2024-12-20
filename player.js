@@ -19,6 +19,10 @@ export class Player {
     return this.role.getName();
   }
 
+  getRoleAlignment() {
+    return this.role.alignment;
+  }
+
   kill() {
     this.isAlive = false;
   }

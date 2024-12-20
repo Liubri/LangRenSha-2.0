@@ -12,8 +12,8 @@ const playersHardCoded = [
 ];
 
 socket.on("updatePlayers", (updatedPlayers) => {
-  console.log("Updated Players:", players);
   players = updatedPlayers; // Update the players array
+  console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
   checkStartGame();
 });
@@ -144,7 +144,11 @@ function renderPlayersGrid() {
       if (currentPlayer.role.name === "Seer") {
         console.log("SeerChecked", seerCheckedPlayers);
         if (seerCheckedPlayers.includes(player.id)) {
-          playerRole = player.role.name; // Show the role of the checked player
+          if(player.role.alignment === "good") {
+            playerRole = "Good";
+          } else {
+            playerRole = "Bad";
+          }
         } else if (currentPlayer.id === player.id) {
           playerRole = player.role.name; // Show the current player's role
         } else {
@@ -297,7 +301,6 @@ function selectPlayer(playerId) {
 
 actionButton.addEventListener("click", () => {
   if (selectedPlayer) {
-    const { name } = players.find((player) => player.id === selectedPlayer);
     const { id } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
@@ -313,7 +316,7 @@ actionButton.addEventListener("click", () => {
         socket.emit("witchAction", {actionType: "save", targetId: id});
         break;
       case "check":
-        socket.emit("seerAction", name);
+        socket.emit("seerAction", id);
         break;
     }
     closeModal();

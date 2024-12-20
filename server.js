@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Witch(), new Werewolf()];
+let availableRoles = [new Werewolf(), new Seer(), new Werewolf()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -102,10 +102,10 @@ io.on("connection", (socket) => {
     io.emit("updatePlayers", game.getCurrentPlayers());
   });
 
-  socket.on("seerAction", (targetName) => {
+  socket.on("seerAction", (targetId) => {
     const target = game
       .getCurrentPlayers()
-      .find((player) => player.name === targetName && player.isAlive);
+      .find((player) => player.id === targetId && player.isAlive);
     if (target) {
       game.addSeerCheckedPlayer(target.id);
     }
@@ -137,14 +137,11 @@ io.on("connection", (socket) => {
 
   socket.on("votePlayerOut", (targetId) => {
     game.addPlayerVote(targetId);
-    console.log("GameVotes: ", game.getPlayerVotes());
-    console.log("currentplayerLength: ", game.getCurrentPlayers().length);
     if (game.getPlayerVotes().length === game.getCurrentPlayers().length) {
       if (game.countVotes() > 0) {
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
-        console.log("votedTarget: ", target);
         target.kill();
         io.emit("updatePlayers", game.getCurrentPlayers());
       }
