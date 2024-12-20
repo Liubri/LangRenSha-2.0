@@ -4,6 +4,7 @@ export class Game {
     this.roles = [];
     this.nightActions = [];
     this.seerCheckedPlayers = [];
+    this.playerVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
     this.turnSequence = ["werewolf", "witch", "seer"];
@@ -118,26 +119,42 @@ export class Game {
     this.werewolvesChoice.push(int);
   }
 
-  countVotes(arr) {
+  countVotes() {
     const frequencyMap = {};
-
-    // Count occurrences of each string (case-insensitive)
-    arr.forEach((str) => {
-      const lowerCaseStr = str.toLowerCase();
-      frequencyMap[lowerCaseStr] = (frequencyMap[lowerCaseStr] || 0) + 1;
+  
+    // Count occurrences of each number
+    this.playerVotes.forEach((num) => {
+      frequencyMap[num] = (frequencyMap[num] || 0) + 1;
     });
-
-    // Find the most frequent string
-    let mostFrequent = null;
+  
+    // Find the maximum frequency
     let maxCount = 0;
-
-    for (const [key, count] of Object.entries(frequencyMap)) {
+    for (const count of Object.values(frequencyMap)) {
       if (count > maxCount) {
         maxCount = count;
-        mostFrequent = key;
       }
     }
-
-    return mostFrequent;
+  
+    // Collect all elements with the maximum frequency
+    const candidates = Object.entries(frequencyMap)
+      .filter(([_, count]) => count === maxCount)
+      .map(([key]) => Number(key)); // Convert keys back to numbers
+  
+    // If there is no single most frequent number, return 0
+    if (candidates.length > 1) {
+      return 0;
+    }
+  
+    // Return the most frequent number
+    return candidates[0];
+  }
+  
+  
+  addPlayerVote(targetId) {
+    this.playerVotes.push(targetId);
+  }
+  
+  getPlayerVotes() {
+    return this.playerVotes;
   }
 }

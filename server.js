@@ -16,6 +16,7 @@ const game = new Game();
 
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { log } from "console";
 
 // __dirname equivalent in ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -86,13 +87,15 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  socket.on("witchAction", ({actionType, targetId}) => {
-    const target = game.getCurrentPlayers().find((player) => player.id === targetId);
+  socket.on("witchAction", ({ actionType, targetId }) => {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.id === targetId);
     console.log("WitchAction called on: ", target);
-    if(target) {
-      if(actionType === "save") {
+    if (target) {
+      if (actionType === "save") {
         target.isAlive = true;
-      } else if(actionType === "poison") {
+      } else if (actionType === "poison") {
         target.kill();
       }
     }
@@ -129,6 +132,22 @@ io.on("connection", (socket) => {
     if (game.getWolfChoice().length === game.getWerewolves().length) {
       target.kill();
       io.emit("updatePlayers", game.getCurrentPlayers());
+    }
+  });
+
+  socket.on("votePlayerOut", (targetId) => {
+    game.addPlayerVote(targetId);
+    console.log("GameVotes: ", game.getPlayerVotes());
+    console.log("currentplayerLength: ", game.getCurrentPlayers().length);
+    if (game.getPlayerVotes().length === game.getCurrentPlayers().length) {
+      if (game.countVotes() > 0) {
+        const target = game
+          .getCurrentPlayers()
+          .find((player) => player.id === game.countVotes() && player.isAlive);
+        console.log("votedTarget: ", target);
+        target.kill();
+        io.emit("updatePlayers", game.getCurrentPlayers());
+      }
     }
   });
 

@@ -301,12 +301,13 @@ actionButton.addEventListener("click", () => {
     const { id } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
-        alert(`You voted for ${name}`);
+        socket.emit("votePlayerOut", id);
         break;
       case "kill":
         socket.emit("werewolfKill", id);
         break;
       case "poison":
+        socket.emit("witchAction", {actionType: "poison", targetId: id});
         break;
       case "save":
         socket.emit("witchAction", {actionType: "save", targetId: id});
