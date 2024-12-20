@@ -43,74 +43,51 @@ function checkStartGame() {
   }
 }
 
-socket.on("updateCurrentTurn", (currentTurn) => {
-  this.currentTurn = currentTurn;
-  console.log("CurrentTurn:", this.currentTurn);
-  console.log("CurrentPlayer:", this.currentPlayer);
-  const killButton = document.querySelector(".action-button.kill");
-  if (killButton) {
-    if (this.currentTurn !== "werewolf") {
-      killButton.disabled = true;
-    } else {
-      killButton.disabled = false;
-    }
-  }
+socket.on("updateCurrentTurn", (newTurn) => {
+  currentTurn = newTurn;
+  console.log("CurrentTurn:", currentTurn);
+  console.log("CurrentPlayer:", currentPlayer);
+  renderButtons();
 });
+
+function isActionAllowed(role, currentTurn) {
+  return role === currentTurn;
+}
 
 function renderButtons() {
   const actionsDiv = document.getElementById("action-buttons");
   actionsDiv.innerHTML = "";
 
+  const createButton = (text, className, action, isEnabled) => {
+    const button = document.createElement("button");
+    button.textContent = text;
+    button.className = `action-button ${className}`;
+    button.disabled = !isEnabled; // Enable or disable the button
+    button.addEventListener("click", () => openModal(action));
+    return button;
+  };
+
+  const isVotingPhase = currentTurn === "vote";
+
   if (currentPlayer.role.name === "Werewolf") {
-    actionsDiv.innerHTML = `
-          <button class="action-button kill">Kill</button>
-          <button class="action-button" id="openVoteModal">Vote</button>
-        `;
+    actionsDiv.appendChild(createButton("Kill", "kill", "kill", currentTurn === "werewolf"));
+    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
   }
   if (currentPlayer.role.name === "Witch") {
-    actionsDiv.innerHTML = `
-          <button class="action-button save">Save</button>
-          <button class="action-button poison">Poison</button>
-          <button class="action-button" id="openVoteModal">Vote</button>
-        `;
+    actionsDiv.appendChild(createButton("Save", "save", "save", currentTurn === "witch"));
+    actionsDiv.appendChild(createButton("Poison", "poison", "poison", currentTurn === "witch"));
+    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
   }
   if (currentPlayer.role.name === "Seer") {
-    actionsDiv.innerHTML = `
-    <button class="action-button check">Check</button>
-    <button class="action-button" id="openVoteModal">Vote</button>
-  `;
+    actionsDiv.appendChild(createButton("Check", "check", "check", currentTurn === "seer"));
+    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
   }
   if (currentPlayer.role.name === "Villager") {
-    actionsDiv.innerHTML += `
-          <button class="action-button" id="openVoteModal">Vote</button>
-        `;
-  }
-
-  // Add event listeners for buttons
-  const voteButton = document.getElementById("openVoteModal");
-  if (voteButton) {
-    voteButton.addEventListener("click", () => openModal("vote"));
-  }
-
-  const killButton = document.querySelector(".action-button.kill");
-  if (killButton) {
-    killButton.addEventListener("click", () => openModal("kill"));
-  }
-
-  const poisonButton = document.querySelector(".action-button.poison");
-  if (poisonButton) {
-    poisonButton.addEventListener("click", () => openModal("poison"));
-  }
-
-  const saveButton = document.querySelector(".action-button.save");
-  if (saveButton) {
-    saveButton.addEventListener("click", () => openModal("save"));
-  }
-  const checkButton = document.querySelector(".action-button.check");
-  if (checkButton) {
-    checkButton.addEventListener("click", () => openModal("check"));
+    actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
   }
 }
+
+
 
 function renderPlayersGrid() {
   // Render players in the main game screen
@@ -161,13 +138,13 @@ function renderPlayersGrid() {
       if (
         currentPlayer.role.name === "Witch" &&
         wolfVictimId.includes(player.id) &&
-        this.currentTurn === "witch"
+        currentTurn === "witch"
       ) {
         console.log("Main WitchCSS called");
         playerCard.classList.add("pulse-animation");
         this.wolfVictimId = [];
       } else {
-        console.log("WitchCurrentTurn:", this.currentTurn);
+        console.log("WitchCurrentTurn:", currentTurn);
         console.log("Remove animationMain called");
         playerCard.classList.remove("pulse-animation");
       }

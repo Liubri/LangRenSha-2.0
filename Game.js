@@ -7,7 +7,7 @@ export class Game {
     this.playerVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
-    this.turnSequence = ["werewolf", "witch", "seer"];
+    this.turnSequence = ["werewolf", "witch", "seer", "vote"];
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
   }

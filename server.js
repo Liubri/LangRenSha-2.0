@@ -114,7 +114,10 @@ io.on("connection", (socket) => {
     }
     console.log(game.getSeerChecked());
     io.emit("updateSeerChecked", game.getSeerChecked());
-    io.emit("updatePlayers", game.getCurrentPlayers());
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn());
+    io.emit("updateGrid");
+    //io.emit("updatePlayers", game.getCurrentPlayers());
   });
 
   let werewolfSelections = {};
@@ -136,7 +139,8 @@ io.on("connection", (socket) => {
       game.clearWolfChoice();
       game.nextTurn();
       io.emit("updateCurrentTurn", game.getCurrentTurn());
-      io.emit("updatePlayers", game.getCurrentPlayers());
+      io.emit("updateGrid");
+      //io.emit("updatePlayers", game.getCurrentPlayers());
     }
   });
 
