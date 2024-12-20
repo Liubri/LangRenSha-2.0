@@ -4,6 +4,7 @@ export class Game {
     this.nightActions = [];
     this.seerCheckedPlayers = [];
     this.playerVotes = [];
+    this.skipVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
     this.turnSequence = ["werewolf", "witch", "seer", "vote"];
@@ -114,6 +115,10 @@ export class Game {
   }
 
   countVotes() {
+    //If the majority wants to skip the votes
+    if(this.playerVotes.length < this.skipVotes.length) {
+      return 0;
+    }
     const frequencyMap = {};
   
     // Count occurrences of each number
@@ -147,8 +152,16 @@ export class Game {
   addPlayerVote(targetId) {
     this.playerVotes.push(targetId);
   }
+
+  addSkipVote(targetId) {
+    this.skipVotes.push(targetId);
+  }
   
   getPlayerVotes() {
     return this.playerVotes;
+  }
+  
+  getPlayerSkips() {
+    return this.skipVotes;
   }
 }

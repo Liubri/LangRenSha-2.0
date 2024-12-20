@@ -34,7 +34,7 @@ function assignRole() {
   if (availableRoles.length === 0) {
     return undefined; // No roles left to assign
   }
-  if(preConfigRoles.length > 0) {
+  if (preConfigRoles.length > 0) {
     availableRoles = preConfigRoles;
   }
   const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
@@ -70,19 +70,17 @@ io.on("connection", (socket) => {
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
     socket.emit("playerJoined", player);
-    if(availableRoles.length == 0) {
+    if (availableRoles.length == 0) {
       io.emit("startGame");
       console.log("StarGame Called");
-      
     }
   });
-  
+
   socket.on("sendPreConfigedLobby", (configFile) => {
     config = configFile;
     //console.log("Config: ", config);
-    createPreConfig()
+    createPreConfig();
     //console.log("Preconfig:", preConfigRoles);
-    
   });
 
   socket.on("startGame", () => {
@@ -177,9 +175,18 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("votePlayerOut", (targetId) => {
-    game.addPlayerVote(targetId);
-    if (game.getPlayerVotes().length === game.getCurrentPlayers().length) {
+  socket.on("votePlayerOut", ({ voteType, targetId }) => {
+    if (voteType == "skip") {
+      game.addSkipVote(targetId);
+    } else if (voteType == "vote") {
+      game.addPlayerVote(targetId);
+    }
+    console.log("Votes: ", game.getPlayerVotes().length);
+    console.log("Skips: ", game.getPlayerSkips().length);
+    if (
+      game.getPlayerVotes().length + game.getPlayerSkips().length ===
+      game.getCurrentPlayers().length
+    ) {
       if (game.countVotes() > 0) {
         const target = game
           .getCurrentPlayers()
@@ -189,7 +196,7 @@ io.on("connection", (socket) => {
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
-    }
+    } 
   });
 
   socket.on("disconnect", () => {

@@ -6,7 +6,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../playerGrid.css" />
-    <link rel="stylesheet" href="../modal.css">
+    <link rel="stylesheet" href="../modal.css" />
     <title>Werewolf</title>
   </head>
   <body>
@@ -43,7 +43,7 @@
           Basic: 4 Werewolves, 4 Villagers, 1 Seer, 1 Witch
         </option>
         <option value="advanced">
-         AdvancedTest: 1 Witch, 1 Seer, 1 Werewolf 
+          AdvancedTest: 1 Witch, 1 Seer, 1 Werewolf
         </option>
         <!-- Add more preconfigured setups as needed -->
       </select>
@@ -99,15 +99,16 @@
     <div class="modal" id="actionModal">
       <h1 id="modalTitle">Action</h1>
       <div class="players-grid" id="playersGrid"></div>
-      <button id="actionButton" class="action-button" disabled>
-        Confirm Action
-      </button>
+      <div class="buttons-container">
+        <button id="actionButton" class="action-button" disabled>
+          Confirm Action
+        </button>
+        <button id="skipVote" class="action-button">Skip Vote</button>
+      </div>
     </div>
 
     <script src="../login.js"></script>
     <script src="../lobby.js"></script>
-    <script>
-
-    </script>
+    <script></script>
   </body>
 </html>

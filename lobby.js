@@ -100,22 +100,22 @@ function renderButtons() {
   const isVotingPhase = currentTurn === "vote";
 
   // Only render buttons if the player is alive
-  if (isPlayerAlive) {
+  if (true) {
     if (currentPlayer.role.name === "Werewolf") {
       actionsDiv.appendChild(createButton("Kill", "kill", "kill", currentTurn === "werewolf"));
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Witch") {
       actionsDiv.appendChild(createButton("Save", "save", "save", currentTurn === "witch"));
       actionsDiv.appendChild(createButton("Poison", "poison", "poison", currentTurn === "witch"));
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Seer") {
       actionsDiv.appendChild(createButton("Check", "check", "check", currentTurn === "seer"));
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Villager") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
   } else {
     // If the player is dead, disable all action buttons
@@ -199,6 +199,7 @@ const actionModal = document.getElementById("actionModal");
 const modalTitle = document.getElementById("modalTitle");
 const playersGrid = document.getElementById("playersGrid");
 const actionButton = document.getElementById("actionButton");
+const skipVoteButton = document.getElementById("skipVote");
 
 let currentAction = null;
 let selectedPlayer = null;
@@ -207,11 +208,13 @@ function openModal(action) {
   currentAction = action;
   selectedPlayer = null;
   actionButton.disabled = true;
-
+  skipVoteButton.classList.add("hidden"); 
   switch (action) {
     case "vote":
       modalTitle.textContent = "Vote for a Player";
       actionButton.textContent = "Cast Vote";
+      skipVoteButton.classList.remove("hidden"); 
+      skipVoteButton.textContent = "Skip Vote";
       break;
     case "kill":
       modalTitle.textContent = "Choose a Player to Eliminate";
@@ -336,7 +339,7 @@ actionButton.addEventListener("click", () => {
     const { id } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
-        socket.emit("votePlayerOut", id);
+        socket.emit("votePlayerOut",  {voteType: "vote", targetId:id});
         break;
       case "kill":
         socket.emit("werewolfKill", id);
@@ -354,4 +357,9 @@ actionButton.addEventListener("click", () => {
     this.currentAction = null;
     closeModal();
   }
+});
+
+skipVoteButton.addEventListener("click", () => {
+  socket.emit("votePlayerOut",  {voteType: "skip", targetId:0});
+  closeModal();
 });

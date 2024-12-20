@@ -45,7 +45,7 @@
 
   .modal .action-button {
     display: block;
-    margin: 0 auto;
+    margin: 0;
     padding: 10px;
     background-color: #3b82f6;
     color: white;
@@ -67,4 +67,14 @@
   .action-button:disabled {
     background-color: #9ca3af;
     cursor: not-allowed;
+  }
+
+  .action-button.hidden {
+    display: none;
+  }
+
+  .buttons-container {
+    display: flex;
+    gap: 5px; /* Adds spacing between the buttons */
+    justify-content: center; /* Aligns buttons horizontally in the center */
   }
