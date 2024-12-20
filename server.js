@@ -27,7 +27,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Werewolf(), new Werewolf(), new Seer()];
+let availableRoles = [new Werewolf(), new Witch(), new Werewolf()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -86,22 +86,15 @@ io.on("connection", (socket) => {
   //   }
   // });
 
-  socket.on("witchSave", (targetName) => {
-    const target = game
-      .getCurrentPlayers()
-      .find((player) => player.name === targetName);
-    if (target) {
-      target.isAlive = true;
-    }
-    io.emit("updatePlayers", game.getCurrentPlayers());
-  });
-
-  socket.on("witchPoison", (targetName) => {
-    const target = game
-      .getCurrentPlayers()
-      .find((player) => player.name === targetName && player.isAlive);
-    if (target) {
-      target.isAlive = false;
+  socket.on("witchAction", ({actionType, targetId}) => {
+    const target = game.getCurrentPlayers().find((player) => player.id === targetId);
+    console.log("WitchAction called on: ", target);
+    if(target) {
+      if(actionType === "save") {
+        target.isAlive = true;
+      } else if(actionType === "poison") {
+        target.kill();
+      }
     }
     io.emit("updatePlayers", game.getCurrentPlayers());
   });

@@ -182,7 +182,6 @@ let currentAction = null;
 let selectedPlayer = null;
 
 function openModal(action) {
-  //console.log("Opened Modal");
   currentAction = action;
   selectedPlayer = null;
   actionButton.disabled = true;
@@ -268,15 +267,15 @@ function renderPlayersSmallGrid() {
           ? '<i data-lucide="check" class="check-icon"></i>'
           : ""
       }`;
+    if(currentPlayer.role.name === "Werewolf") {
       Object.entries(werewolfSelections).forEach(([werewolfId, targetId]) => {
         if (player.id === targetId) {
           const color = getWerewolfColor(werewolfId);
           playerElement.style.border = `3px solid ${color}`; // Dynamic color
         }
       });
+    }
       //playerElement.classList.add("targeted"); // Add the 'targeted' class
-    
-
     playerElement.addEventListener("click", () => {
       selectPlayer(player.id);
     });
@@ -308,10 +307,9 @@ actionButton.addEventListener("click", () => {
         socket.emit("werewolfKill", id);
         break;
       case "poison":
-        socket.emit("witchPoison", name);
         break;
       case "save":
-        socket.emit("witchSave", name);
+        socket.emit("witchAction", {actionType: "save", targetId: id});
         break;
       case "check":
         socket.emit("seerAction", name);
