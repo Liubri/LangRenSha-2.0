@@ -34,11 +34,31 @@ function assignRole() {
   if (availableRoles.length === 0) {
     return undefined; // No roles left to assign
   }
+  if(preConfigRoles.length > 0) {
+    availableRoles = preConfigRoles;
+  }
   const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
   const role = availableRoles[randomIndex]; // Get the role
   availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
   console.log("Available roles after assignment:", availableRoles);
   return role; // Return the selected role
+}
+
+let config;
+let preConfigRoles = [];
+function createPreConfig() {
+  for (let i = 0; i < config.werewolves; i++) {
+    preConfigRoles.push(new Werewolf());
+  }
+  for (let i = 0; i < config.witch; i++) {
+    preConfigRoles.push(new Witch());
+  }
+  for (let i = 0; i < config.seer; i++) {
+    preConfigRoles.push(new Seer());
+  }
+  for (let i = 0; i < config.villagers; i++) {
+    preConfigRoles.push(new Villager());
+  }
 }
 
 io.on("connection", (socket) => {
@@ -50,6 +70,19 @@ io.on("connection", (socket) => {
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
     socket.emit("playerJoined", player);
+    if(availableRoles.length == 0) {
+      io.emit("startGame");
+      console.log("StarGame Called");
+      
+    }
+  });
+  
+  socket.on("sendPreConfigedLobby", (configFile) => {
+    config = configFile;
+    //console.log("Config: ", config);
+    createPreConfig()
+    //console.log("Preconfig:", preConfigRoles);
+    
   });
 
   socket.on("startGame", () => {
@@ -152,6 +185,8 @@ io.on("connection", (socket) => {
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
         target.kill();
+        game.nextTurn();
+        io.emit("updateCurrentTurn", game.getCurrentTurn());
         io.emit("updatePlayers", game.getCurrentPlayers());
       }
     }

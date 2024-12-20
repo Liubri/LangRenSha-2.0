@@ -4,9 +4,9 @@ lucide.createIcons();
 
 function handleJoinRoom() {
   const playerName = document.getElementById("playerName").value;
-  const lobbyId = document.querySelector(
-    'input[placeholder="Enter Lobby ID"]'
-  ).value;
+  // const lobbyId = document.querySelector(
+  //   'input[placeholder="Enter Lobby ID"]'
+  // ).value;
 
   const playerInputs = document.querySelector(".player-inputs");
   if (playerInputs) {
@@ -32,14 +32,13 @@ document.getElementById("lobbyType").addEventListener("change", function () {
 });
 
 function createLobby() {
-  const lobbyName = document.getElementById("lobbyName").value;
   const lobbyType = document.getElementById("lobbyType").value;
   let config;
 
   if (lobbyType === "preconfigured") {
     const preconfiguredLobby =
       document.getElementById("preconfiguredLobby").value;
-    config = { type: "preconfigured", setup: preconfiguredLobby };
+    createPreConfig();
   } else {
     config = {
       type: "custom",
@@ -53,6 +52,25 @@ function createLobby() {
       },
     };
   }
-
-  socket.emit("createLobby", { lobbyName, config });
 }
+
+function createPreConfig() {
+  const selectedLobby = document.getElementById("preconfiguredLobby").value;
+  const config = preconfiguredLobbies[selectedLobby];
+  socket.emit("sendPreConfigedLobby", config);
+}
+
+const preconfiguredLobbies = {
+  basic: {
+    werewolves: 4,
+    villagers: 4,
+    seer: 1,
+    witch: 1,
+  },
+  advanced: {
+    werewolves: 1,
+    seer: 1,
+    witch: 1,
+  },
+  // Add more configurations as needed
+};

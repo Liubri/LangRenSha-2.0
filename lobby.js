@@ -16,7 +16,7 @@ socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
   console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
-  checkStartGame();
+  //checkStartGame();
 });
 
 socket.on("updateGrid", () => {
@@ -36,12 +36,17 @@ socket.on("renderButtons", () => {
   renderButtons();
 });
 
-function checkStartGame() {
-  if (players.length == 3 && !gameStarted) {
-    gameStarted = true;
-    socket.emit("startGame");
-  }
-}
+socket.on("startGame", () => {
+  socket.emit("startGame");
+  gameStarted = true;
+});
+
+// function checkStartGame() {
+//   if (players.length == 3 && !gameStarted) {
+//     gameStarted = true;
+//     socket.emit("startGame");
+//   }
+// }
 
 socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
