@@ -10,6 +10,7 @@ export class Game {
     this.turnSequence = ["werewolf", "witch", "seer", "vote"];
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
+    this.voteMap = new Map();
   }
 
   getCurrentTurn() {
@@ -163,5 +164,13 @@ export class Game {
   
   getPlayerSkips() {
     return this.skipVotes;
+  }
+  
+  setVoteMap(voter, targetId) {
+    this.voteMap.set(voter, targetId);
+  }
+  
+  getVoteMap() {
+    return this.voteMap;
   }
 }

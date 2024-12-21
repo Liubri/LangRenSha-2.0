@@ -1,0 +1,57 @@
+.voteCard {
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  background-color: #fff;
+}
+
+.card-header {
+  margin-bottom: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.grouped-votes,
+.skipped-votes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vote-item,
+.skipped-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.vote-item.inactive,
+.skipped-item.inactive {
+  opacity: 0.5;
+}
+
+.summary {
+  font-size: 0.875rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+}

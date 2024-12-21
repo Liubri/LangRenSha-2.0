@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .card {
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  background-color: #fff;
+}
+
+.card-header {
+  margin-bottom: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.grouped-votes, .skipped-votes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vote-item, .skipped-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.vote-item.inactive, .skipped-item.inactive {
+  opacity: 0.5;
+}
+
+.summary {
+  font-size: 0.875rem;
+  color: #666;
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+}
+
+    </style>
+</head>
+<body>
+    <div id="voting-results" class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg class="icon">
+              <!-- SVG for Vote Icon -->
+            </svg>
+            Voting Results
+          </div>
+        </div>
+        <div class="card-content">
+          <div id="grouped-votes" class="grouped-votes"></div>
+          <div id="skipped-votes" class="skipped-votes hidden"></div>
+          <div class="summary"></div>
+        </div>
+      </div>
+      
+</body>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+  const votingResults = [
+    { voter: "Player 1", votedFor: "Player 3", isAlive: true },
+    { voter: "Player 2", votedFor: null, isAlive: true },
+    { voter: "Player 3", votedFor: "Player 1", isAlive: true },
+    { voter: "Player 4", votedFor: "Player 1", isAlive: false },
+  ];
+
+  const groupedVotes = votingResults.reduce((acc, vote) => {
+    if (vote.votedFor) {
+      acc[vote.votedFor] = acc[vote.votedFor] || [];
+      acc[vote.votedFor].push(vote);
+    }
+    return acc;
+  }, {});
+
+  const skippedVotes = votingResults.filter(vote => !vote.votedFor);
+
+  const groupedVotesContainer = document.getElementById("grouped-votes");
+  Object.entries(groupedVotes).forEach(([target, votes]) => {
+    const groupDiv = document.createElement("div");
+    groupDiv.className = "vote-group";
+
+    const title = document.createElement("h3");
+    title.textContent = `Votes for ${target} (${votes.length})`;
+    groupDiv.appendChild(title);
+
+    votes.forEach(vote => {
+      const voteItem = document.createElement("div");
+      voteItem.className = `vote-item ${!vote.isAlive ? "inactive" : ""}`;
+      voteItem.textContent = `${vote.voter}`;
+      groupDiv.appendChild(voteItem);
+    });
+
+    groupedVotesContainer.appendChild(groupDiv);
+  });
+
+  const skippedVotesContainer = document.getElementById("skipped-votes");
+  if (skippedVotes.length > 0) {
+    skippedVotesContainer.classList.remove("hidden");
+
+    const title = document.createElement("h3");
+    title.textContent = `Skipped Votes (${skippedVotes.length})`;
+    skippedVotesContainer.appendChild(title);
+
+    skippedVotes.forEach(vote => {
+      const skipItem = document.createElement("div");
+      skipItem.className = `skipped-item ${!vote.isAlive ? "inactive" : ""}`;
+      skipItem.textContent = `${vote.voter}`;
+      skippedVotesContainer.appendChild(skipItem);
+    });
+  }
+
+  const summary = document.querySelector(".summary");
+  summary.textContent = `Total Votes: ${
+    votingResults.length - skippedVotes.length
+  } • Skipped: ${skippedVotes.length}`;
+});
+
+</script>
+</html>

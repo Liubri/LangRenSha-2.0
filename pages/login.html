@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="../playerGrid.css" />
     <link rel="stylesheet" href="../modal.css" />
+    <link rel="stylesheet" href="../voteSummary.css" />
     <title>Werewolf</title>
   </head>
   <body>
@@ -107,8 +108,113 @@
       </div>
     </div>
 
+    <!-- Voting Results-->
+    <div id="voting-results" class="voteCard">
+      <div class="card-header">
+        <div class="card-title">
+          <svg class="icon">
+            <!-- SVG for Vote Icon -->
+          </svg>
+          Voting Results
+        </div>
+      </div>
+      <div class="card-content">
+        <div id="grouped-votes" class="grouped-votes"></div>
+        <div id="skipped-votes" class="skipped-votes hidden"></div>
+        <div class="summary"></div>
+      </div>
+    </div>
+
     <script src="../login.js"></script>
     <script src="../lobby.js"></script>
-    <script></script>
+    <script>
+      let voterMap = new Map();
+      let groupedVotesMap = new Map();
+
+      socket.on("sendVoteMap", (voteMap) => {
+        // Populate voterMap with the received data
+        voterMap = new Map(Object.entries(voteMap));
+        console.log("Received voterMap:", voterMap);
+        console.log("VoteMap Size: ", voterMap.size);
+
+        // Reset groupedVotesMap before grouping
+        groupedVotesMap = new Map();
+
+        // Group votes
+        for (const [voter, target] of voterMap) {
+          if (target) {
+            const targetId = target.id; // Use unique identifier
+            if (!groupedVotesMap.has(targetId)) {
+              groupedVotesMap.set(targetId, { target, voters: [] });
+            }
+            groupedVotesMap.get(targetId).voters.push(voter);
+          }
+        }
+
+        console.log("Grouped Votes Map:", groupedVotesMap);
+
+        // Render grouped votes (if needed)
+        if (voterMap.size == 3) {
+          renderGroupedVotes(groupedVotesMap);
+        }
+      });
+
+      // Function to render grouped votes (optional)
+      function renderGroupedVotes(groupedVotesMap) {
+        const skippedVotes = [];
+        const votingResults = [];
+        const groupedVotesContainer = document.getElementById("grouped-votes");
+        const skippedVotesContainer = document.getElementById("skipped-votes");
+
+        // Clear previous content
+        groupedVotesContainer.innerHTML = "";
+        skippedVotesContainer.innerHTML = ""; // Clear skipped votes content
+
+        // Group votes and separate skipped votes
+        for (const [targetId, { target, voters }] of groupedVotesMap) {
+          if (targetId === 0) {
+            // If the targetId is 0, treat it as a skipped vote
+            skippedVotes.push(...voters);
+          } else {
+            // Otherwise, create a div for grouped votes
+            votingResults.push(...voters);
+            const groupDiv = document.createElement("div");
+            groupDiv.className = "vote-group";
+
+            const title = document.createElement("h3");
+            title.textContent = `Votes for ${target.name} (${voters.length})`;
+            groupDiv.appendChild(title);
+
+            voters.forEach((voter) => {
+              const voterDiv = document.createElement("div");
+              voterDiv.className = "vote-item";
+              voterDiv.textContent = voter;
+              groupDiv.appendChild(voterDiv);
+            });
+
+            groupedVotesContainer.appendChild(groupDiv);
+          }
+        }
+
+        // Render skipped votes
+        if (skippedVotes.length > 0) {
+          skippedVotesContainer.classList.remove("hidden"); // Make sure skipped votes section is visible
+          const title = document.createElement("h3");
+          title.textContent = `Skipped Votes (${skippedVotes.length})`;
+          skippedVotesContainer.appendChild(title);
+
+          skippedVotes.forEach((voter) => {
+            const skipItem = document.createElement("div");
+            skipItem.className = "skipped-item";
+            skipItem.textContent = voter;
+            skippedVotesContainer.appendChild(skipItem);
+          });
+        }
+
+        // Update the summary
+        const summary = document.querySelector(".summary");
+        summary.textContent = `Total Votes: ${votingResults.length} • Skipped: ${skippedVotes.length}`;
+      }
+    </script>
   </body>
 </html>

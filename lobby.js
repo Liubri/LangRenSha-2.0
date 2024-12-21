@@ -17,7 +17,7 @@ socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
   console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
-  if(gameStarted) {
+  if (gameStarted) {
     checkIfAlive();
   }
   //checkStartGame();
@@ -46,11 +46,13 @@ socket.on("startGame", () => {
 });
 
 function checkIfAlive() {
-  const currentPlayerInList = players.find(player => player.id === currentPlayer.id);
+  const currentPlayerInList = players.find(
+    (player) => player.id === currentPlayer.id
+  );
   if (currentPlayerInList) {
     if (!currentPlayerInList.isAlive) {
-        currentPlayer.isAlive = false; // Update currentPlayer status
-        console.log(`${currentPlayer.name} is now dead.`);
+      currentPlayer.isAlive = false; // Update currentPlayer status
+      console.log(`${currentPlayer.name} is now dead.`);
     }
   }
 }
@@ -74,7 +76,7 @@ function isActionAllowed(role, currentTurn) {
 }
 
 function checkPlayerAlive() {
-  if(currentPlayer.isAlive == false) {
+  if (currentPlayer.isAlive == false) {
     return false;
   } else {
     return true;
@@ -102,16 +104,24 @@ function renderButtons() {
   // Only render buttons if the player is alive
   if (true) {
     if (currentPlayer.role.name === "Werewolf") {
-      actionsDiv.appendChild(createButton("Kill", "kill", "kill", currentTurn === "werewolf"));
+      actionsDiv.appendChild(
+        createButton("Kill", "kill", "kill", currentTurn === "werewolf")
+      );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Witch") {
-      actionsDiv.appendChild(createButton("Save", "save", "save", currentTurn === "witch"));
-      actionsDiv.appendChild(createButton("Poison", "poison", "poison", currentTurn === "witch"));
+      actionsDiv.appendChild(
+        createButton("Save", "save", "save", currentTurn === "witch")
+      );
+      actionsDiv.appendChild(
+        createButton("Poison", "poison", "poison", currentTurn === "witch")
+      );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Seer") {
-      actionsDiv.appendChild(createButton("Check", "check", "check", currentTurn === "seer"));
+      actionsDiv.appendChild(
+        createButton("Check", "check", "check", currentTurn === "seer")
+      );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
     }
     if (currentPlayer.role.name === "Villager") {
@@ -124,9 +134,6 @@ function renderButtons() {
     actionsDiv.appendChild(deadMessage);
   }
 }
-
-
-
 
 function renderPlayersGrid() {
   // Render players in the main game screen
@@ -208,12 +215,12 @@ function openModal(action) {
   currentAction = action;
   selectedPlayer = null;
   actionButton.disabled = true;
-  skipVoteButton.classList.add("hidden"); 
+  skipVoteButton.classList.add("hidden");
   switch (action) {
     case "vote":
       modalTitle.textContent = "Vote for a Player";
       actionButton.textContent = "Cast Vote";
-      skipVoteButton.classList.remove("hidden"); 
+      skipVoteButton.classList.remove("hidden");
       skipVoteButton.textContent = "Skip Vote";
       break;
     case "kill":
@@ -339,7 +346,8 @@ actionButton.addEventListener("click", () => {
     const { id } = players.find((player) => player.id === selectedPlayer);
     switch (currentAction) {
       case "vote":
-        socket.emit("votePlayerOut",  {voteType: "vote", targetId:id});
+        socket.emit("voterData", { voterId: currentPlayer.id, targetId: id });
+        socket.emit("votePlayerOut", { voteType: "vote", targetId: id });
         break;
       case "kill":
         socket.emit("werewolfKill", id);
@@ -360,6 +368,7 @@ actionButton.addEventListener("click", () => {
 });
 
 skipVoteButton.addEventListener("click", () => {
-  socket.emit("votePlayerOut",  {voteType: "skip", targetId:0});
+  socket.emit("voterData", { voterId: currentPlayer.id, targetId: 0});
+  socket.emit("votePlayerOut", { voteType: "skip", targetId: 0 });
   closeModal();
 });

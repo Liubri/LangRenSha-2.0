@@ -181,13 +181,14 @@ io.on("connection", (socket) => {
     } else if (voteType == "vote") {
       game.addPlayerVote(targetId);
     }
-    console.log("Votes: ", game.getPlayerVotes().length);
-    console.log("Skips: ", game.getPlayerSkips().length);
+    console.log("VoteMap: ", game.getVoteMap());
     if (
       game.getPlayerVotes().length + game.getPlayerSkips().length ===
       game.getCurrentPlayers().length
     ) {
       if (game.countVotes() > 0) {
+        console.log("Emitting voteMap:", game.getVoteMap());
+        io.emit("sendVoteMap", Object.fromEntries(game.getVoteMap()));
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
@@ -196,9 +197,40 @@ io.on("connection", (socket) => {
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
-    } 
+    } else {
+      console.log("Emitting voteMap:", game.getVoteMap());
+      io.emit("sendVoteMap", Object.fromEntries(game.getVoteMap()));
+    }
   });
+  
+  socket.on("voterData", ({voterId, targetId}) => {
+    const voter = game
+    .getCurrentPlayers()
+    .find(
+      (player) => player.id === voterId && player.isAlive
+    );
+    let target;
+    if (targetId === 0) {
+      // Create a new player object
+      target = {
+        id: 0,               // New player's ID (assuming 0 is a placeholder)
+        name: "New Player",   // Default name for new player (you can change this)
+        isAlive: true         // Assuming the new player is alive
+      };
+    } else {
+      // Otherwise, find the target player who is alive
+      target = game
+        .getCurrentPlayers()
+        .find((player) => player.id === targetId && player.isAlive);
+    }
+    game.setVoteMap(voter.name, target);
+  });
+  
+  // function groupVotesMap() {
+  //   let voteMap = game.getVoteMap();
 
+  // }
+  
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
     // Handle player disconnection if needed
