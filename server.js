@@ -182,9 +182,10 @@ io.on("connection", (socket) => {
       game.addPlayerVote(targetId);
     }
     console.log("VoteMap: ", game.getVoteMap());
+    console.log("AlivePlayers: ", game.getAlivePlayers());
     if (
       game.getPlayerVotes().length + game.getPlayerSkips().length ===
-      game.getCurrentPlayers().length
+      game.getAlivePlayers().length
     ) {
       if (game.countVotes() > 0) {
         console.log("Emitting voteMap:", game.getVoteMap());
@@ -193,7 +194,19 @@ io.on("connection", (socket) => {
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
+        console.log("PlayerVotes: ", game.getPlayerVotes());
+        console.log("PlayerSkips: ", game.getPlayerSkips());
         target.kill();
+        game.clearVotes();
+        console.log("PlayerVotes AfterClear: ", game.getPlayerVotes());
+        console.log("PlayerSkips AfterClear: ", game.getPlayerSkips());
+        game.nextTurn();
+        io.emit("updatePlayers", game.getCurrentPlayers());
+        io.emit("updateCurrentTurn", game.getCurrentTurn());
+      } else {
+        io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
+        io.emit("renderVoteResults");
+        game.clearVotes();
         game.nextTurn();
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());

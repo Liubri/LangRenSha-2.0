@@ -74,6 +74,10 @@ export class Game {
     return this.players;
   }
 
+  getAlivePlayers() {
+    return this.players.filter((p) => p.isAlive);
+  }
+
   logAction(action) {
     this.logs.push(action);
   }
@@ -117,7 +121,7 @@ export class Game {
 
   countVotes() {
     //If the majority wants to skip the votes
-    if(this.playerVotes.length < this.skipVotes.length) {
+    if(this.playerVotes.length <= this.skipVotes.length) {
       return 0;
     }
     const frequencyMap = {};
@@ -172,5 +176,11 @@ export class Game {
   
   getVoteMap() {
     return this.voteMap;
+  }
+
+  clearVotes() {
+    this.playerVotes = [];
+    this.skipVotes = [];
+    this.voteMap.clear();
   }
 }

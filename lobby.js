@@ -102,12 +102,12 @@ function renderButtons() {
   const isVotingPhase = currentTurn === "vote";
 
   // Only render buttons if the player is alive
-  if (true) {
+  if (isPlayerAlive) {
     if (currentPlayer.role.name === "Werewolf") {
       actionsDiv.appendChild(
         createButton("Kill", "kill", "kill", currentTurn === "werewolf")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
     if (currentPlayer.role.name === "Witch") {
       actionsDiv.appendChild(
@@ -116,16 +116,16 @@ function renderButtons() {
       actionsDiv.appendChild(
         createButton("Poison", "poison", "poison", currentTurn === "witch")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
     if (currentPlayer.role.name === "Seer") {
       actionsDiv.appendChild(
         createButton("Check", "check", "check", currentTurn === "seer")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
     if (currentPlayer.role.name === "Villager") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", true));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
   } else {
     // If the player is dead, disable all action buttons
@@ -291,7 +291,8 @@ socket.on("notifyKilled", (wolfChoice) => {
 
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
-  players.forEach((player) => {
+  const alivePlayers = players.filter(player => player.isAlive);
+  alivePlayers.forEach((player) => {
     const playerElement = document.createElement("div");
     playerElement.className = `player ${player.isAlive ? "" : "dead"} ${
       selectedPlayer === player.id ? "selected" : ""

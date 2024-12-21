@@ -1,0 +1,37 @@
+svg path {
+    fill:transparent;
+    stroke: #6672E1;
+    stroke-width: 0.3;
+    stroke-dasharray: 150;
+    stroke-dashoffset: 50;
+    animation: textAnimation 4s ease-in-out 1 forwards;
+}
+
+@keyframes textAnimation {
+   0% {
+    stroke-dashoffset: 150;
+   }
+   80% {
+    fill: transparent;
+   }
+   100% {
+    fill: #fff;
+    stroke-dashoffset: 0;
+   }
+}
+
+.villagers-win {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+svg {
+    width: 700px;
+    height: 700px;
+}
+
+.hidden {
+    display: none;
+}
