@@ -133,32 +133,16 @@
 
       socket.on("sendVoteMap", (voteMap) => {
         // Populate voterMap with the received data
-        voterMap = new Map(Object.entries(voteMap));
-        console.log("Received voterMap:", voterMap);
-        console.log("VoteMap Size: ", voterMap.size);
-
-        // Reset groupedVotesMap before grouping
-        groupedVotesMap = new Map();
-
-        // Group votes
-        for (const [voter, target] of voterMap) {
-          if (target) {
-            const targetId = target.id; // Use unique identifier
-            if (!groupedVotesMap.has(targetId)) {
-              groupedVotesMap.set(targetId, { target, voters: [] });
-            }
-            groupedVotesMap.get(targetId).voters.push(voter);
-          }
-        }
-
+        groupedVotesMap = new Map(Object.entries(voteMap));
+        console.log("Received voterMap:", groupedVotesMap);
+        console.log("VoteMap Size: ", groupedVotesMap.size);
         console.log("Grouped Votes Map:", groupedVotesMap);
-
-        // Render grouped votes (if needed)
-        if (voterMap.size == 3) {
-          renderGroupedVotes(groupedVotesMap);
-        }
       });
-
+      
+      socket.on("renderVoteResults", () => {
+        renderGroupedVotes(groupedVotesMap);
+      });
+ 
       // Function to render grouped votes (optional)
       function renderGroupedVotes(groupedVotesMap) {
         const skippedVotes = [];
@@ -172,9 +156,11 @@
 
         // Group votes and separate skipped votes
         for (const [targetId, { target, voters }] of groupedVotesMap) {
-          if (targetId === 0) {
+          console.log("TargetId: ", targetId);
+          if (targetId == 0) {
             // If the targetId is 0, treat it as a skipped vote
             skippedVotes.push(...voters);
+            console.log("SkippedVotes: ", skippedVotes);
           } else {
             // Otherwise, create a div for grouped votes
             votingResults.push(...voters);

@@ -188,7 +188,8 @@ io.on("connection", (socket) => {
     ) {
       if (game.countVotes() > 0) {
         console.log("Emitting voteMap:", game.getVoteMap());
-        io.emit("sendVoteMap", Object.fromEntries(game.getVoteMap()));
+        io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
+        io.emit("renderVoteResults");
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
@@ -197,10 +198,7 @@ io.on("connection", (socket) => {
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
-    } else {
-      console.log("Emitting voteMap:", game.getVoteMap());
-      io.emit("sendVoteMap", Object.fromEntries(game.getVoteMap()));
-    }
+    } 
   });
   
   socket.on("voterData", ({voterId, targetId}) => {
@@ -226,10 +224,23 @@ io.on("connection", (socket) => {
     game.setVoteMap(voter.name, target);
   });
   
-  // function groupVotesMap() {
-  //   let voteMap = game.getVoteMap();
-
-  // }
+  let groupedVotesMap = new Map();
+  function groupVotesMap() {
+    let voteMap = game.getVoteMap();
+    groupedVotesMap = new Map();
+    // Group votes
+    for (const [voter, target] of voteMap) {
+      if (target) {
+        const targetId = target.id; // Use unique identifier
+        if (!groupedVotesMap.has(targetId)) {
+          groupedVotesMap.set(targetId, { target, voters: [] });
+        }
+        //Push person who voted for target in voter array
+        groupedVotesMap.get(targetId).voters.push(voter);
+      }
+    }
+    return groupedVotesMap;
+  }
   
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
