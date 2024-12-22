@@ -59,3 +59,28 @@
 .werewolves-win.hidden {
   display: none;
 }
+
+#jesterWin path {
+    stroke: #d3a42d;
+    stroke-width: 0.3;
+    stroke-dasharray: 160;
+    stroke-dashoffset: 50;
+    animation: textAnimation 4s ease-in-out 1 forwards;
+  }
+  
+  .jester-win {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+  }
+  
+  #jesterWin {
+    width: 700px;
+    height: 700px;
+  }
+  
+  .jester-win.hidden {
+    display: none;
+  }

@@ -62,7 +62,9 @@ export class Game {
     );
     const villagers = this.players.filter(
       (p) => p.isAlive && p.role.name === "Villager"
-    );if (aliveWerewolves.length === 0) {
+    );
+    console.log("AliveWerewolves: ", aliveWerewolves);
+    if (aliveWerewolves.length === 0) {
       //console.log("Good wins");
       return "Good wins";
     } else if (aliveGood.length <= aliveWerewolves.length || villagers.length == 0) {

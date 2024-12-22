@@ -8,6 +8,7 @@ import { Werewolf } from "./roles/Werewolf.js";
 import { Villager } from "./roles/Villager.js";
 import { Witch } from "./roles/Witch.js";
 import { Seer } from "./roles/Seer.js";
+import { Jester } from "./roles/Jester.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +29,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Witch(), new Seer(), new Werewolf(), new Villager()];
+let availableRoles = [new Witch(), new Werewolf(), new Jester()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -63,7 +64,6 @@ function createPreConfig() {
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
-  const endResult = game.checkGameOver();
   socket.on("joinGame", (playerName) => {
     const playerRole = assignRole();
     const player = new Player(playerName, playerRole);
@@ -112,8 +112,8 @@ io.on("connection", (socket) => {
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updatePlayers", game.getCurrentPlayers());
-    if(endResult === "Good wins") {
-      socket.emit("winMessage");
+    if(game.checkGameOver() == "Good wins") {
+      io.emit("winMessage");
     }
   });
   
@@ -190,8 +190,10 @@ io.on("connection", (socket) => {
         game.nextTurn();
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
-        if(game.checkGameOver) {
-          socket.emit("winMessage");
+        console.log("Target: ", target);
+        if(target && target.role.name === "Jester") {
+          console.log("JesterWins Called");
+          io.emit("jesterWins");
         }
       } else {
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));

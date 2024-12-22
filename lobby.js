@@ -138,6 +138,9 @@ function renderButtons() {
     if (currentPlayer.role.name === "Villager") {
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
+    if (currentPlayer.role.name === "Jester") {
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+    }
   } else {
     // If the player is dead, disable all action buttons
     const deadMessage = document.createElement("p");
