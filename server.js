@@ -18,6 +18,7 @@ const game = new Game();
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { log } from "console";
+import { clearInterval } from "timers";
 
 // __dirname equivalent in ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -45,6 +46,7 @@ function assignRole() {
   return role; // Return the selected role
 }
 
+let countDown = [];
 let config;
 let preConfigRoles = [];
 function createPreConfig() {
@@ -87,12 +89,49 @@ io.on("connection", (socket) => {
     if (!gameInProgress) {
       // Prevent re-triggering game start
       console.log("Game Started!");
+      startGameTimer(io, 15);
       gameInProgress = true; // Set flag to indicate game has started
       io.emit("updatePlayers", game.getCurrentPlayers());
       game.startGame();
       io.emit("updateCurrentTurn", game.getCurrentTurn());
       io.emit("renderButtons");
     }
+  });
+  
+  function startGameTimer(io, duration) {
+    if(countDown.length > 0) {
+      clearAllIntervals();
+    }
+    let timeLeft = duration;
+    io.emit("resetTimerUI");
+    io.emit("startTime", timeLeft); // Emit timer start event
+    let timerInterval = setInterval(() => {
+      timeLeft--;
+      io.emit("updateTimer", timeLeft);
+      if (timeLeft<=0) {
+        clearInterval(timerInterval);
+        game.nextTurn();
+        io.emit("updateCurrentTurn", game.getCurrentTurn());
+      }
+    }, 1000);
+    countDown.push(timerInterval); 
+    //console.log("counDown: ", countDown);
+  }
+  
+  function clearAllIntervals() {
+    //console.log(`[SERVER] Clearing all intervals. Current intervals:`, countDown);
+    countDown.forEach(clearInterval);
+    countDown = [];
+    //console.log(`[SERVER] All intervals cleared. Updated intervals:`, countDown);
+  }
+  
+  socket.on("clearrAllTime",()=> {
+    clearAllIntervals();
+  });
+  
+  socket.on("turnEndedBeforeTimer",()=> {
+    console.log("TimerEndedByTurn");
+    startGameTimer(io, 15);
   });
 
   socket.on("witchAction", ({ actionType, targetId }) => {
@@ -112,6 +151,7 @@ io.on("connection", (socket) => {
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updatePlayers", game.getCurrentPlayers());
+    io.emit("updateGrid");
     if(game.checkGameOver() == "Good wins") {
       io.emit("winMessage");
     }

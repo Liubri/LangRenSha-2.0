@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Animated Countdown Timer</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Montserrat:700"
+      rel="stylesheet"
+    />
+    <style>
+      html {
+        box-sizing: border-box;
+      }
+
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .timer {
+        width: 200px;
+        height: 200px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 80px;
+        box-shadow: 0 0 0 1.875vmin,
+          inset 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125),
+          3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
+        text-shadow: 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
+      }
+
+      /* @media (min-width: 600px) {
+            .timer {
+                width: 50vmin;
+                height: 50vmin;
+                font-size: 20vmin;
+                box-shadow: 0 0 0 1.25vmin,
+                            inset 2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125),
+                            2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125);
+                text-shadow: 2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125);
+            }
+        } */
+
+      .timer:after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: -100;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.125);
+        animation: none;
+      }
+      
+      .timer.starting:after {
+        animation: timerIndicator 15s 1s linear forwards;
+      }
+
+      /* @keyframes backgroundColorChange {
+            6.67% { background-color: hsl(208, 80%, 60%); }
+            13.33% { background-color: hsl(256, 80%, 60%); }
+            20% { background-color: hsl(304, 80%, 60%); }
+            26.67% { background-color: hsl(352, 80%, 60%); }
+            33.33% { background-color: hsl(400, 80%, 60%); }
+            40% { background-color: hsl(448, 80%, 60%); }
+            46.67% { background-color: hsl(496, 80%, 60%); }
+            53.33% { background-color: hsl(544, 80%, 60%); }
+            60% { background-color: hsl(592, 80%, 60%); }
+            66.67% { background-color: hsl(640, 80%, 60%); }
+            73.33% { background-color: hsl(688, 80%, 60%); }
+            80% { background-color: hsl(736, 80%, 60%); }
+            86.67% { background-color: hsl(784, 80%, 60%); }
+            93.33% { background-color: hsl(832, 80%, 60%); }
+            100% { background-color: hsl(880, 80%, 60%); }
+        } */
+
+      @keyframes timerIndicator {
+        100% {
+          transform: translateY(100%);
+        }
+      }
+
+      /* @keyframes timerBeat {
+            40%, 80% {
+                transform: none;
+            }
+            50% {
+                transform: scale(1.125);
+            }
+        } */
+    </style>
+  </head>
+  <body>
+    <div class="timer hidden"></div>
+    <button onclick="resetTimerUI()">reset</button>
+    <button onclick="startTimer()">start Timer</button>
+    <button onclick="clearIntervalTest()">clear Interval</button>
+
+    <script>
+      const timerElement = document.querySelector(".timer");
+      let timerLength = 15;
+      let timerDelay = 1000; // 1 second
+      let countdowns = [];
+      function startTimer() {
+        resetTimerUI();
+        let timeLeft = timerLength;
+        timerElement.textContent = timeLeft;
+        void timerElement.offsetWidth; 
+        timerElement.classList.add("starting");
+
+        countdown = setInterval(() => {
+          console.log("Countdown: ", countdown);
+          timeLeft--;
+          if (timeLeft <= 0) {
+            clearInterval(countdown);
+            timerElement.textContent = ""; // Clear the timer text
+          } else {
+            timerElement.textContent = timeLeft;
+          }
+        }, 1000);
+        countdowns.push(countdown); 
+        console.log("Countdown2: ", countdown);
+        // Add beat animation
+        const beatAnimation = `timerBeat 1s ${
+          timerDelay - 125
+        }ms ${timerLength} forwards`;
+        timerElement.style.animation = beatAnimation;
+      }
+
+      // Start the timer after a 1-second delay
+      setTimeout(startTimer, timerDelay);
+      function resetTimerUI() {
+        console.log("ClearTimeUI called");
+        clearIntervalTest();
+        timerElement.textContent = ""; // Clear the timer text
+        timerElement.classList.add("hidden"); // Ensure the timer is visible
+        timerElement.classList.remove("starting");
+        timerElement.style.animation = "none"; // Reset any previous animations
+      }
+      function clearIntervalTest() {
+        countdowns.forEach(clearInterval);
+        countdowns = []; // Reset the array
+      }
+    </script>
+  </body>
+</html>

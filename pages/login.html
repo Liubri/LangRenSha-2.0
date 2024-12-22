@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="../modal.css" />
     <link rel="stylesheet" href="../voteSummary.css" />
     <link rel="stylesheet" href="../endGameText.css">
+    <link rel="stylesheet" href="../timer.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
     <title>Werewolf</title>
   </head>
   <body>
@@ -30,7 +32,15 @@
         </button>
       </div>
       <button onclick="tButtons()">toggleButtons</button>
+      <button onclick="callClearAllIntervals()">resetTimerInterval</button>
+      <button onclick="resetTimerUI()">resetTimerUI</button>
+      <div id="currentTurnDisplay" class="current-turn">
+        Current Turn: <span id="currentTurnText">N/A</span>
+      </div>
       <!-- <button onclick="toggleBlur()">toggleBlur</button> -->
+      <div id="time-container">
+        <div class="timer hidden"></div>
+      </div>
     </div>
 
     <!-- Create a Lobby-->
@@ -151,6 +161,7 @@
     <script src="../login.js"></script>
     <script src="../lobby.js"></script>
     <script src="../voteDisplay.js"></script>
+    <script src="../timer.js"></script>
     <script>
       const villagersMessage = document.getElementsByClassName("villagers-win")[0];
       socket.on("winMessage", ()=> {

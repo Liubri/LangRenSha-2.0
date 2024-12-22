@@ -68,6 +68,8 @@ socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
   console.log("CurrentTurn:", currentTurn);
   console.log("CurrentPlayer:", currentPlayer);
+  const currentTurnText = document.getElementById("currentTurnText");
+  currentTurnText.textContent = currentTurn;
   renderButtons();
 });
 
@@ -394,6 +396,7 @@ actionButton.addEventListener("click", () => {
         socket.emit("seerAction", id);
         break;
     }
+    socket.emit("turnEndedBeforeTimer");
     this.currentAction = null;
     closeModal();
   }

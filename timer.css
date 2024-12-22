@@ -1,0 +1,87 @@
+.timer {
+    font-family: 'Montserrat', sans-serif;
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 80px;
+    box-shadow: 0 0 0 1.875vmin, 
+                inset 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125),
+                3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
+    text-shadow: 3.75vmin 3.75vmin 7.5vmin rgba(0, 0, 0, 0.125);
+}
+
+.timer.hidden {
+    display: none;
+}
+
+/* @media (min-width: 600px) {
+    .timer {
+        width: 50vmin;
+        height: 50vmin;
+        font-size: 20vmin;
+        box-shadow: 0 0 0 1.25vmin,
+                    inset 2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125),
+                    2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125);
+        text-shadow: 2.5vmin 2.5vmin 5vmin rgba(0, 0, 0, 0.125);
+    }
+} */
+
+.timer:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -100;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.125);
+    animation: none;
+}
+
+.timer.starting:after {
+    animation: timerIndicator 15s 1s linear forwards;
+}
+
+
+/* @keyframes backgroundColorChange {
+    6.67% { background-color: hsl(208, 80%, 60%); }
+    13.33% { background-color: hsl(256, 80%, 60%); }
+    20% { background-color: hsl(304, 80%, 60%); }
+    26.67% { background-color: hsl(352, 80%, 60%); }
+    33.33% { background-color: hsl(400, 80%, 60%); }
+    40% { background-color: hsl(448, 80%, 60%); }
+    46.67% { background-color: hsl(496, 80%, 60%); }
+    53.33% { background-color: hsl(544, 80%, 60%); }
+    60% { background-color: hsl(592, 80%, 60%); }
+    66.67% { background-color: hsl(640, 80%, 60%); }
+    73.33% { background-color: hsl(688, 80%, 60%); }
+    80% { background-color: hsl(736, 80%, 60%); }
+    86.67% { background-color: hsl(784, 80%, 60%); }
+    93.33% { background-color: hsl(832, 80%, 60%); }
+    100% { background-color: hsl(880, 80%, 60%); }
+} */
+
+@keyframes timerIndicator {
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+/* @keyframes timerBeat {
+    40%, 80% {
+        transform: none;
+    }
+    50% {
+        transform: scale(1.125);
+    }
+} */
