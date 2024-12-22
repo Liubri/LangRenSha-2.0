@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Witch(), new Seer(), new Werewolf()];
+let availableRoles = [new Witch(), new Seer(), new Werewolf(), new Villager()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -63,7 +63,7 @@ function createPreConfig() {
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
-
+  const endResult = game.checkGameOver();
   socket.on("joinGame", (playerName) => {
     const playerRole = assignRole();
     const player = new Player(playerName, playerRole);
@@ -95,45 +95,32 @@ io.on("connection", (socket) => {
     }
   });
 
-  // socket.on("werewolfKill", (victimName) => {
-  //   console.log(`Werewolf has chosen to kill: ${victimName}`);
-  //   const victim = game
-  //     .getCurrentPlayers()
-  //     .find((player) => player.name === victimName && player.isAlive);
-  //   if (victim && game.getCurrentTurn() == "werewolf") {
-  //     victim.isAlive = false;
-  //     io.emit(
-  //       "message",
-  //       `${victimName.name} has been killed by the werewolves.`
-  //     );
-  //     //const gameOver = game.checkGameOver();
-  //     //if (!gameOver) {
-  //     //  game.nextTurn();
-  //     //  io.emit("updateCurrentTurn", game.getCurrentTurn());
-  //     //  console.log(game.getCurrentTurn());
-  //     //}
-  //     game.nextTurn();
-  //     io.emit("updateCurrentTurn", game.getCurrentTurn());
-  //     console.log(game.getCurrentTurn());
-  //     io.emit("updatePlayers", game.getCurrentPlayers());
-  //   }
-  // });
-
   socket.on("witchAction", ({ actionType, targetId }) => {
     const target = game
       .getCurrentPlayers()
       .find((player) => player.id === targetId);
-    console.log("WitchAction called on: ", target);
+    //console.log("WitchAction called on: ", target);
     if (target) {
       if (actionType === "save") {
         target.isAlive = true;
+        socket.emit("witchUsedItem", "medicine");
       } else if (actionType === "poison") {
         target.kill();
+        socket.emit("witchUsedItem", "poison");
       }
     }
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updatePlayers", game.getCurrentPlayers());
+    if(endResult === "Good wins") {
+      socket.emit("winMessage");
+    }
+  });
+  
+  let buttonsEnabled = false;
+  socket.on("toggleAllButtons", ()=> {
+    buttonsEnabled = !buttonsEnabled; 
+    io.emit("toggleButtons", buttonsEnabled);
   });
 
   socket.on("seerAction", (targetId) => {
@@ -181,28 +168,31 @@ io.on("connection", (socket) => {
     } else if (voteType == "vote") {
       game.addPlayerVote(targetId);
     }
-    console.log("VoteMap: ", game.getVoteMap());
-    console.log("AlivePlayers: ", game.getAlivePlayers());
+    //console.log("VoteMap: ", game.getVoteMap());
+    //console.log("AlivePlayers: ", game.getAlivePlayers());
     if (
       game.getPlayerVotes().length + game.getPlayerSkips().length ===
       game.getAlivePlayers().length
     ) {
       if (game.countVotes() > 0) {
-        console.log("Emitting voteMap:", game.getVoteMap());
+        //console.log("Emitting voteMap:", game.getVoteMap());
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
         io.emit("renderVoteResults");
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
-        console.log("PlayerVotes: ", game.getPlayerVotes());
-        console.log("PlayerSkips: ", game.getPlayerSkips());
+        //console.log("PlayerVotes: ", game.getPlayerVotes());
+        //console.log("PlayerSkips: ", game.getPlayerSkips());
         target.kill();
         game.clearVotes();
-        console.log("PlayerVotes AfterClear: ", game.getPlayerVotes());
-        console.log("PlayerSkips AfterClear: ", game.getPlayerSkips());
+        //console.log("PlayerVotes AfterClear: ", game.getPlayerVotes());
+        //console.log("PlayerSkips AfterClear: ", game.getPlayerSkips());
         game.nextTurn();
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
+        if(game.checkGameOver) {
+          socket.emit("winMessage");
+        }
       } else {
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
         io.emit("renderVoteResults");

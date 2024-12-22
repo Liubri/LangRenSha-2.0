@@ -7,8 +7,4 @@ export class Role {
   getName() {
     return this.name;
   }
-
-  performAction(game, player, target) {
-    throw new Error("performAction must be implemented by subclasses");
-  }
 }

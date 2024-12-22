@@ -60,14 +60,16 @@ export class Game {
     const aliveGood = this.players.filter(
       (p) => p.isAlive && p.role.alignment === "good"
     );
-    if (aliveWerewolves.length === 0) {
-      console.log("Good wins");
-      return true;
-    } else if (aliveGood.length <= aliveWerewolves.length) {
-      console.log("Evil wins");
-      return true;
-    }
-    return false;
+    const villagers = this.players.filter(
+      (p) => p.isAlive && p.role.name === "Villager"
+    );if (aliveWerewolves.length === 0) {
+      //console.log("Good wins");
+      return "Good wins";
+    } else if (aliveGood.length <= aliveWerewolves.length || villagers.length == 0) {
+      //console.log("Evil wins");
+      return "Evil wins";
+    } 
+    return "Game continues";
   }
 
   getCurrentPlayers() {

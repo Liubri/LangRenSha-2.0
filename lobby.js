@@ -83,6 +83,17 @@ function checkPlayerAlive() {
   }
 }
 
+let witchHasMedicine = true;
+let witchHasPoison = true;
+
+socket.on("witchUsedItem", (item) => {
+  if(item == "poison") {
+    witchHasPoison = false;
+  } else {
+    witchHasMedicine = false;
+  }
+});
+
 function renderButtons() {
   const actionsDiv = document.getElementById("action-buttons");
   actionsDiv.innerHTML = "";
@@ -111,10 +122,10 @@ function renderButtons() {
     }
     if (currentPlayer.role.name === "Witch") {
       actionsDiv.appendChild(
-        createButton("Save", "save", "save", currentTurn === "witch")
+        createButton("Save", "save", "save", currentTurn === "witch" && witchHasMedicine)
       );
       actionsDiv.appendChild(
-        createButton("Poison", "poison", "poison", currentTurn === "witch")
+        createButton("Poison", "poison", "poison", currentTurn === "witch" && witchHasPoison)
       );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
@@ -134,6 +145,23 @@ function renderButtons() {
     actionsDiv.appendChild(deadMessage);
   }
 }
+// Utility function to toggle buttons
+function toggleButtonsGlobally(isEnabled) {
+  const buttons = document.querySelectorAll(".action-button");
+  buttons.forEach((button) => {
+    button.disabled = !isEnabled;
+  });
+}
+
+// Listen for toggleButtons event
+socket.on("toggleButtons", (isEnabled) => {
+  toggleButtonsGlobally(isEnabled);
+});
+
+function tButtons() { 
+  socket.emit("toggleAllButtons"); 
+}
+
 
 function renderPlayersGrid() {
   // Render players in the main game screen

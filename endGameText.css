@@ -1,37 +1,61 @@
-svg path {
-    fill:transparent;
-    stroke: #6672E1;
-    stroke-width: 0.3;
-    stroke-dasharray: 150;
-    stroke-dashoffset: 50;
-    animation: textAnimation 4s ease-in-out 1 forwards;
+#goodWin path {
+  fill: transparent;
+  stroke: #6672e1;
+  stroke-width: 0.3;
+  stroke-dasharray: 150;
+  stroke-dashoffset: 50;
+  animation: textAnimation 4s ease-in-out 1 forwards;
 }
 
 @keyframes textAnimation {
-   0% {
+  0% {
     stroke-dashoffset: 150;
-   }
-   80% {
-    fill: transparent;
-   }
-   100% {
-    fill: #fff;
+  }
+  80% {
+    fill: #d8dadf;
+  }
+  100% {
+    fill: #e6e8eb;
     stroke-dashoffset: 0;
-   }
+  }
 }
 
 .villagers-win {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-svg {
-    width: 700px;
-    height: 700px;
+#goodWin {
+  width: 700px;
+  height: 700px;
 }
 
-.hidden {
-    display: none;
+.villagers-win.hidden {
+  display: none;
+}
+
+#evilWin path {
+  stroke: #e04c4c;
+  stroke-width: 0.3;
+  stroke-dasharray: 160;
+  stroke-dashoffset: 50;
+  animation: textAnimation 4s ease-in-out 1 forwards;
+}
+
+.werewolves-win {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#evilWin {
+  width: 700px;
+  height: 700px;
+}
+
+.werewolves-win.hidden {
+  display: none;
 }
