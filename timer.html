@@ -66,9 +66,30 @@
         background-color: rgba(0, 0, 0, 0.125);
         animation: none;
       }
-      
+
+      .time-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
       .timer.starting:after {
         animation: timerIndicator 15s 1s linear forwards;
+      }
+
+      .hidden {
+        visibility: hidden;
+      }
+      @keyframes fadeInRight {
+        0% {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateX(0);
+        }
       }
 
       /* @keyframes backgroundColorChange {
@@ -106,7 +127,9 @@
     </style>
   </head>
   <body>
-    <div class="timer hidden"></div>
+    <div class="time-container">
+      <div class="timer hidden"></div>
+    </div>
     <button onclick="resetTimerUI()">reset</button>
     <button onclick="startTimer()">start Timer</button>
     <button onclick="clearIntervalTest()">clear Interval</button>
@@ -118,9 +141,15 @@
       let countdowns = [];
       function startTimer() {
         resetTimerUI();
+        const timeContainer = document.querySelector(".time-container");
+        timeContainer.style.animation = "none"; // Clear the current animation
+        void timeContainer.offsetWidth; // Trigger reflow to reset the animation
+        timeContainer.style.animation = "fadeInRight 2s ease-in-out forwards"; // Reapply animation
+
         let timeLeft = timerLength;
+        timerElement.classList.remove("hidden");
         timerElement.textContent = timeLeft;
-        void timerElement.offsetWidth; 
+        void timerElement.offsetWidth;
         timerElement.classList.add("starting");
 
         countdown = setInterval(() => {
@@ -133,7 +162,7 @@
             timerElement.textContent = timeLeft;
           }
         }, 1000);
-        countdowns.push(countdown); 
+        countdowns.push(countdown);
         console.log("Countdown2: ", countdown);
         // Add beat animation
         const beatAnimation = `timerBeat 1s ${
@@ -143,7 +172,8 @@
       }
 
       // Start the timer after a 1-second delay
-      setTimeout(startTimer, timerDelay);
+      //setTimeout(startTimer, timerDelay);
+      startTimer();
       function resetTimerUI() {
         console.log("ClearTimeUI called");
         clearIntervalTest();

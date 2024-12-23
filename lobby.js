@@ -240,6 +240,7 @@ const modalTitle = document.getElementById("modalTitle");
 const playersGrid = document.getElementById("playersGrid");
 const actionButton = document.getElementById("actionButton");
 const skipVoteButton = document.getElementById("skipVote");
+const cancelSkill = document.getElementById("cancelSkill");
 
 let currentAction = null;
 let selectedPlayer = null;
@@ -249,6 +250,8 @@ function openModal(action) {
   selectedPlayer = null;
   actionButton.disabled = true;
   skipVoteButton.classList.add("hidden");
+  cancelSkill.classList.add("hidden");
+  closeModal.textContent = "Cancel";
   switch (action) {
     case "vote":
       modalTitle.textContent = "Vote for a Player";
@@ -263,10 +266,12 @@ function openModal(action) {
     case "poison":
       modalTitle.textContent = "Choose a Player to Poison";
       actionButton.textContent = "Use Poison Potion";
+      cancelSkill.classList.remove("hidden");
       break;
     case "save":
       modalTitle.textContent = "Choose a Player to Save";
       actionButton.textContent = "Use Save Potion";
+      cancelSkill.classList.remove("hidden");
       break;
     case "check":
       modalTitle.textContent = "Choose a Player to Check";
@@ -396,7 +401,7 @@ actionButton.addEventListener("click", () => {
         socket.emit("seerAction", id);
         break;
     }
-    socket.emit("turnEndedBeforeTimer");
+    //socket.emit("turnEndedBeforeTimer");
     this.currentAction = null;
     closeModal();
   }
@@ -405,5 +410,10 @@ actionButton.addEventListener("click", () => {
 skipVoteButton.addEventListener("click", () => {
   socket.emit("voterData", { voterId: currentPlayer.id, targetId: 0});
   socket.emit("votePlayerOut", { voteType: "skip", targetId: 0 });
+  closeModal();
+});
+
+cancelSkill.addEventListener("click", () => {
+  selectedPlayer = null;
   closeModal();
 });

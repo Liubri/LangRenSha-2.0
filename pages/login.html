@@ -31,9 +31,10 @@
           Join Room
         </button>
       </div>
+      <!--Debugging Buttons-->
       <button onclick="tButtons()">toggleButtons</button>
-      <button onclick="callClearAllIntervals()">resetTimerInterval</button>
-      <button onclick="resetTimerUI()">resetTimerUI</button>
+      <!-- <button onclick="callClearAllIntervals()">resetTimerInterval</button> -->
+      <!-- <button onclick="resetTimerUI()">resetTimerUI</button> -->
       <div id="currentTurnDisplay" class="current-turn">
         Current Turn: <span id="currentTurnText">N/A</span>
       </div>
@@ -118,6 +119,7 @@
           Confirm Action
         </button>
         <button id="skipVote" class="action-button">Skip Vote</button>
+        <button id="cancelSkill" class="action-button">Cancel</button>
       </div>
     </div>
 
@@ -183,7 +185,7 @@
 
       const style = document.createElement('style');
       style.textContent = `
-       .blur-everything > *:not(.jester-win) {
+       .blur-everything > *:not(.werewolves-win, .jester-win, .villagers-win) {
           animation: blurAnimation 2s ease-in-out 1 forwards;
        }
 @keyframes blurAnimation {

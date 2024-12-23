@@ -1,8 +1,5 @@
 let timerElement = document.querySelector(".timer");
 const timerContainer = document.getElementById("time-container");
-// if (!timerContainer) {
-//     console.error("Timer container not found in the DOM.");
-// }
 let timerLength = 15;
 let timerDelay = 1000; // 1 second
 // function startTimer() {

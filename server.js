@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
     if (!gameInProgress) {
       // Prevent re-triggering game start
       console.log("Game Started!");
-      startGameTimer(io, 15);
+      // startGameTimer(io, 15);
       gameInProgress = true; // Set flag to indicate game has started
       io.emit("updatePlayers", game.getCurrentPlayers());
       game.startGame();
