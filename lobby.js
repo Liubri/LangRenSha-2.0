@@ -57,6 +57,10 @@ function checkIfAlive() {
   }
 }
 
+function isAlive() {
+  return currentPlayer.isAlive;
+}
+
 // function checkStartGame() {
 //   if (players.length == 3 && !gameStarted) {
 //     gameStarted = true;
@@ -71,6 +75,24 @@ socket.on("updateCurrentTurn", (newTurn) => {
   const currentTurnText = document.getElementById("currentTurnText");
   currentTurnText.textContent = currentTurn;
   renderButtons();
+    // Check if the current player is alive
+    console.log("Role: ", currentPlayer.role.name);
+  console.log("Alive: ", isAlive());
+  console.log("CurrentTurn: ", currentTurn);
+  if(gameStarted) {
+    if (!isAlive() && currentTurn !== "vote" && currentPlayer.role.name.toLowerCase() === currentTurn) {
+      // Check if there are any alive players before emitting nextTurn
+      const alivePlayersWithRole = players.filter(player => player.isAlive && player.role.name === currentPlayer.role.name);
+      if (alivePlayersWithRole.length > 0) {
+          socket.emit("nextTurn");
+      } else {
+          console.log("No alive players left to continue the game.");
+      }
+    }
+    if(currentTurn === "vote") {
+      socket.emit("updateGameState");
+    }
+  }
 });
 
 function isActionAllowed(role, currentTurn) {
@@ -111,6 +133,15 @@ function renderButtons() {
     button.addEventListener("click", () => openModal(action));
     return button;
   };
+  
+  const createPassTurn = (isEnabled) => {
+    const button = document.createElement("button");
+    button.textContent = "Pass Turn";
+    button.className = `action-button passTurn`;
+    button.disabled = !isEnabled;
+    button.addEventListener("click", () => passPlayerTurn());
+    return button;
+  }
 
   const isVotingPhase = currentTurn === "vote";
 
@@ -129,6 +160,7 @@ function renderButtons() {
       actionsDiv.appendChild(
         createButton("Poison", "poison", "poison", currentTurn === "witch" && witchHasPoison)
       );
+      actionsDiv.appendChild(createPassTurn(currentTurn === "witch"));
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
     }
     if (currentPlayer.role.name === "Seer") {
@@ -251,7 +283,6 @@ function openModal(action) {
   actionButton.disabled = true;
   skipVoteButton.classList.add("hidden");
   cancelSkill.classList.add("hidden");
-  closeModal.textContent = "Cancel";
   switch (action) {
     case "vote":
       modalTitle.textContent = "Vote for a Player";
@@ -417,3 +448,9 @@ cancelSkill.addEventListener("click", () => {
   selectedPlayer = null;
   closeModal();
 });
+
+function passPlayerTurn() {
+  selectedPlayer = null;
+  socket.emit("nextTurn");
+  closeModal();
+}

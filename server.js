@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Witch(), new Werewolf(), new Jester()];
+let availableRoles = [new Witch(), new Werewolf(), new Seer()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -98,8 +98,18 @@ io.on("connection", (socket) => {
     }
   });
   
+  socket.on("updateGameState", ()=> {
+    io.emit("updatePlayers", game.getCurrentPlayers());
+  });
+
+  socket.on("nextTurn", () => {
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn());
+    socket.emit("updateGrid");
+  });
+
   function startGameTimer(io, duration) {
-    if(countDown.length > 0) {
+    if (countDown.length > 0) {
       clearAllIntervals();
     }
     let timeLeft = duration;
@@ -108,28 +118,28 @@ io.on("connection", (socket) => {
     let timerInterval = setInterval(() => {
       timeLeft--;
       io.emit("updateTimer", timeLeft);
-      if (timeLeft<=0) {
+      if (timeLeft <= 0) {
         clearInterval(timerInterval);
         game.nextTurn();
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
     }, 1000);
-    countDown.push(timerInterval); 
+    countDown.push(timerInterval);
     //console.log("counDown: ", countDown);
   }
-  
+
   function clearAllIntervals() {
     //console.log(`[SERVER] Clearing all intervals. Current intervals:`, countDown);
     countDown.forEach(clearInterval);
     countDown = [];
     //console.log(`[SERVER] All intervals cleared. Updated intervals:`, countDown);
   }
-  
-  socket.on("clearrAllTime",()=> {
+
+  socket.on("clearrAllTime", () => {
     clearAllIntervals();
   });
-  
-  socket.on("turnEndedBeforeTimer",()=> {
+
+  socket.on("turnEndedBeforeTimer", () => {
     console.log("TimerEndedByTurn");
     startGameTimer(io, 15);
   });
@@ -152,14 +162,14 @@ io.on("connection", (socket) => {
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updatePlayers", game.getCurrentPlayers());
     io.emit("updateGrid");
-    if(game.checkGameOver() == "Good wins") {
+    if (game.checkGameOver() == "Good wins") {
       io.emit("winMessage");
     }
   });
-  
+
   let buttonsEnabled = false;
-  socket.on("toggleAllButtons", ()=> {
-    buttonsEnabled = !buttonsEnabled; 
+  socket.on("toggleAllButtons", () => {
+    buttonsEnabled = !buttonsEnabled;
     io.emit("toggleButtons", buttonsEnabled);
   });
 
@@ -193,7 +203,7 @@ io.on("connection", (socket) => {
       );
     if (game.getWolfChoice().length === game.getWerewolves().length) {
       io.emit("notifyKilled", game.getWolfChoice());
-      target.isAlive = false;
+      target.kill();
       game.clearWolfChoice();
       game.nextTurn();
       io.emit("updateCurrentTurn", game.getCurrentTurn());
@@ -223,6 +233,7 @@ io.on("connection", (socket) => {
           .find((player) => player.id === game.countVotes() && player.isAlive);
         //console.log("PlayerVotes: ", game.getPlayerVotes());
         //console.log("PlayerSkips: ", game.getPlayerSkips());
+        console.log("targetType: ", typeof target);
         target.kill();
         game.clearVotes();
         //console.log("PlayerVotes AfterClear: ", game.getPlayerVotes());
@@ -231,7 +242,7 @@ io.on("connection", (socket) => {
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
         console.log("Target: ", target);
-        if(target && target.role.name === "Jester") {
+        if (target && target.role.name === "Jester") {
           console.log("JesterWins Called");
           io.emit("jesterWins");
         }
@@ -243,22 +254,20 @@ io.on("connection", (socket) => {
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
-    } 
+    }
   });
-  
-  socket.on("voterData", ({voterId, targetId}) => {
+
+  socket.on("voterData", ({ voterId, targetId }) => {
     const voter = game
-    .getCurrentPlayers()
-    .find(
-      (player) => player.id === voterId && player.isAlive
-    );
+      .getCurrentPlayers()
+      .find((player) => player.id === voterId && player.isAlive);
     let target;
     if (targetId === 0) {
       // Create a new player object
       target = {
-        id: 0,               // New player's ID (assuming 0 is a placeholder)
-        name: "New Player",   // Default name for new player (you can change this)
-        isAlive: true         // Assuming the new player is alive
+        id: 0, // New player's ID (assuming 0 is a placeholder)
+        name: "New Player", // Default name for new player (you can change this)
+        isAlive: true, // Assuming the new player is alive
       };
     } else {
       // Otherwise, find the target player who is alive
@@ -268,7 +277,7 @@ io.on("connection", (socket) => {
     }
     game.setVoteMap(voter.name, target);
   });
-  
+
   let groupedVotesMap = new Map();
   function groupVotesMap() {
     let voteMap = game.getVoteMap();
@@ -286,7 +295,23 @@ io.on("connection", (socket) => {
     }
     return groupedVotesMap;
   }
-  
+
+  function linkPlayers(targetId1, targetId2) {
+    const player1 = game.getCurrentPlayers().find((p) => p.id === targetId1);
+    const player2 = game.getCurrentPlayers().find((p) => p.id === targetId2);
+
+    if (player1 && player2) {
+      player1.linkWith(player2);
+      console.log(`${player1.name} and ${player2.name} are now linked.`);
+    } else {
+      console.error("One or both players not found.");
+    }
+  }
+
+  function canPerformAction(player) {
+    return player.isAlive && !player.state.isAsleep;
+  }
+
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
     // Handle player disconnection if needed

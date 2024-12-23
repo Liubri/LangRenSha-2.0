@@ -5,8 +5,14 @@ export class Player {
     this.name = name;
     this.role = role;
     this.isAlive = true;
+    this.state = {
+      isAsleep: false,
+      isLinked: false,
+      linkedPlayer: null, // Reference to the linked player
+      parentId: null, // For the Child role to track its parent
+    };
   }
-  
+
   getName() {
     return this.name;
   }
@@ -14,7 +20,7 @@ export class Player {
   assignRole(role) {
     this.role = role;
   }
-  
+
   getRoleName() {
     return this.role.getName();
   }
@@ -24,6 +30,30 @@ export class Player {
   }
 
   kill() {
-    this.isAlive = false;
+    if (this.isAlive) {
+      this.isAlive = false;
+      if (
+        this.state.isLinked &&
+        this.state.linkedPlayer &&
+        this.state.linkedPlayer.isAlive
+      ) {
+        console.log(
+          `${this.name} is linked with ${this.state.linkedPlayer.name}. They will also die.`
+        );
+        this.state.linkedPlayer.kill();
+      }
+    }
+  }
+
+  linkWith(player) {
+    this.state.isLinked = true;
+    this.state.linkedPlayer = player;
+    player.state.isLinked = true;
+    player.state.linkedPlayer = this;
+  }
+
+  // Method to set a parent for the Child role
+  setParent(parentId) {
+    this.state.parentId = parentId;
   }
 }
