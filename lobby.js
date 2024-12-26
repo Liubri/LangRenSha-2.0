@@ -15,7 +15,7 @@ const playersHardCoded = [
 // renderPlayersGrid();
 socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
-  console.log("Updated Players:", players);
+  //console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
   if (gameStarted) {
     checkIfAlive();
@@ -36,7 +36,7 @@ socket.on("playerJoined", (player) => {
 });
 
 socket.on("renderButtons", () => {
-  console.log("Role assigned to current player:", currentPlayer);
+  //console.log("Role assigned to current player:", currentPlayer);
   renderButtons();
 });
 
@@ -71,25 +71,26 @@ function isAlive() {
 socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
   console.log("CurrentTurn:", currentTurn);
-  console.log("CurrentPlayer:", currentPlayer);
+  //console.log("CurrentPlayer:", currentPlayer);
   const currentTurnText = document.getElementById("currentTurnText");
   currentTurnText.textContent = currentTurn;
   renderButtons();
     // Check if the current player is alive
-    console.log("Role: ", currentPlayer.role.name);
-  console.log("Alive: ", isAlive());
-  console.log("CurrentTurn: ", currentTurn);
+  //console.log("Role: ", currentPlayer.role.name);
+  //console.log("Alive: ", isAlive());
+  //console.log("CurrentTurn: ", currentTurn);
   if(gameStarted) {
     if (!isAlive() && currentTurn !== "vote" && currentPlayer.role.name.toLowerCase() === currentTurn) {
       // Check if there are any alive players before emitting nextTurn
       const alivePlayersWithRole = players.filter(player => player.isAlive && player.role.name === currentPlayer.role.name);
       if (alivePlayersWithRole.length > 0) {
-          socket.emit("nextTurn");
+        return;
       } else {
-          console.log("No alive players left to continue the game.");
+        socket.emit("nextTurn");
       }
     }
     if(currentTurn === "vote") {
+      console.log("CurrentTurn is voting");
       socket.emit("updateGameState");
     }
   }
@@ -218,7 +219,7 @@ function renderPlayersGrid() {
     let playerRole;
     if (gameStarted) {
       if (currentPlayer.role.name === "Seer") {
-        console.log("SeerChecked", seerCheckedPlayers);
+        //console.log("SeerChecked", seerCheckedPlayers);
         if (seerCheckedPlayers.includes(player.id)) {
           if (player.role.alignment === "good") {
             playerRole = "Good";
@@ -352,9 +353,9 @@ function getWerewolfColor(werewolfId) {
 
 let wolfVictimId = [];
 socket.on("notifyKilled", (wolfChoice) => {
-  console.log("NotifyCalled");
+  //console.log("NotifyCalled");
   wolfVictimId = wolfChoice;
-  console.log("Wolf Victim", wolfVictimId);
+  //console.log("Wolf Victim", wolfVictimId);
   renderPlayersSmallGrid();
 });
 

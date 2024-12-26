@@ -30,6 +30,7 @@
 #goodWin {
   width: 700px;
   height: 700px;
+  z-index: 100;
 }
 
 .villagers-win.hidden {
@@ -54,6 +55,7 @@
 #evilWin {
   width: 700px;
   height: 700px;
+  z-index: 100;
 }
 
 .werewolves-win.hidden {
@@ -73,12 +75,12 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 100;
   }
   
   #jesterWin {
     width: 700px;
     height: 700px;
+    z-index: 100;
   }
   
   .jester-win.hidden {

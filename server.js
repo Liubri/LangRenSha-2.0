@@ -15,6 +15,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 const game = new Game();
 
+
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { log } from "console";
@@ -30,7 +31,7 @@ app.get("/", (req, res) => {
 });
 
 let gameInProgress = false;
-let availableRoles = [new Witch(), new Werewolf(), new Seer()];
+let availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager()];
 
 function assignRole() {
   if (availableRoles.length === 0) {
@@ -99,7 +100,10 @@ io.on("connection", (socket) => {
   });
   
   socket.on("updateGameState", ()=> {
+    console.log("UpdateGameState called");
     io.emit("updatePlayers", game.getCurrentPlayers());
+    io.emit("renderButtons");
+    endMessage();
   });
 
   socket.on("nextTurn", () => {
@@ -160,7 +164,6 @@ io.on("connection", (socket) => {
     }
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
-    io.emit("updatePlayers", game.getCurrentPlayers());
     io.emit("updateGrid");
     if (game.checkGameOver() == "Good wins") {
       io.emit("winMessage");
@@ -180,7 +183,7 @@ io.on("connection", (socket) => {
     if (target) {
       game.addSeerCheckedPlayer(target.id);
     }
-    console.log(game.getSeerChecked());
+    //console.log(game.getSeerChecked());
     io.emit("updateSeerChecked", game.getSeerChecked());
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
@@ -245,18 +248,33 @@ io.on("connection", (socket) => {
         if (target && target.role.name === "Jester") {
           console.log("JesterWins Called");
           io.emit("jesterWins");
+        } else {
+          endMessage();
         }
       } else {
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
         io.emit("renderVoteResults");
         game.clearVotes();
+        endMessage();
         game.nextTurn();
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
       }
     }
   });
-
+  
+  function endMessage() {
+    switch(game.checkGameOver()) {
+      case "Good wins":
+        io.emit("winMessage");
+        break;
+      case "Evil wins":
+        io.emit("evilMessage");
+        break;
+      default:
+        return;
+    }
+  }
   socket.on("voterData", ({ voterId, targetId }) => {
     const voter = game
       .getCurrentPlayers()
