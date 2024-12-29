@@ -10,7 +10,60 @@
     <link rel="stylesheet" href="../voteSummary.css" />
     <link rel="stylesheet" href="../endGameText.css">
     <link rel="stylesheet" href="../timer.css">
+    <link rel="stylesheet" href="../sun.css">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
+    <style>
+        body {
+        /* background-color: #6b46c1; bg-purple-800 */
+        background-image: linear-gradient(#312e81, #6b46c1);
+        font-family: system-ui;
+      }
+      .container {
+        background-color: #7e3af2; /* bg-purple-700 */
+        border-radius: 0.75rem;
+        border: 20px white;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        padding: 2rem;
+        width: 100%;
+        max-width: 28rem;
+      }
+      h1 {
+        color: white;
+        font-size: 2.3rem;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      input {
+        background-color: #5521b5; /* bg-purple-600 */
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        width: 100%;
+        margin-bottom: 1.5rem;
+        box-sizing: border-box;
+      }
+      input::placeholder {
+        color: #d8b4fe; /* placeholder-purple-300 */
+      }
+      input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #a78bfa; /* focus:ring-2 focus:ring-purple-400 */
+      }
+      .player-inputs{
+        width: 100%;
+        display: grid;
+      }
+      .join-room {
+        background-color: #3b82f6; /* bg-blue-500 */
+      }
+      .join-room:hover:not(:disabled) {
+        background-color: #2563eb; /* hover:bg-blue-600 */
+      }
+    </style>
     <title>Werewolf</title>
   </head>
   <body>
@@ -21,7 +74,7 @@
       </h1>
       <div class="player-inputs">
         <input type="text" id="playerName" placeholder="Enter your name" required/>
-        <input type="text" placeholder="Enter Lobby ID" />
+        <!-- <input type="text" placeholder="Enter Lobby ID" /> -->
         <button class="create-lobby" onclick="createLobby()">
           <i data-lucide="users" class="icon"></i>
           Create Lobby
@@ -31,18 +84,33 @@
           Join Room
         </button>
       </div>
+      <div class="celestial-body-container">
+        <div class="sun-ray" style="--rotation: 0deg;"></div>
+        <div class="sun-ray" style="--rotation: 45deg;"></div>
+        <div class="sun-ray" style="--rotation: 90deg;"></div>
+        <div class="sun-ray" style="--rotation: 135deg;"></div>
+        <div class="sun-ray" style="--rotation: 180deg;"></div>
+        <div class="sun-ray" style="--rotation: 225deg;"></div>
+        <div class="sun-ray" style="--rotation: 270deg;"></div>
+        <div class="sun-ray" style="--rotation: 315deg;"></div>
+        <div class="celestial-body"></div>
+      </div>
+    </div>
       <!--Debugging Buttons-->
-      <button onclick="tButtons()">toggleButtons</button>
+      <!-- <button onclick="tButtons()">toggleButtons</button> -->
       <!-- <button onclick="callClearAllIntervals()">resetTimerInterval</button> -->
       <!-- <button onclick="resetTimerUI()">resetTimerUI</button> -->
       <div id="currentTurnDisplay" class="current-turn">
         Current Turn: <span id="currentTurnText">N/A</span>
       </div>
-      <button onclick="toggleBlur()">toggleBlur</button>
+      <!-- <button onclick="toggleBlur()">toggleBlur</button> -->
       <div id="time-container">
         <div class="timer hidden"></div>
       </div>
     </div>
+    
+
+
 
     <!-- Create a Lobby-->
     <label for="lobbyType">Select Lobby Type:</label>
@@ -165,6 +233,20 @@
     <script src="../voteDisplay.js"></script>
     <script src="../timer.js"></script>
     <script>
+      socket.on("setNight",() => {
+        setNightState();
+      });
+      socket.on("setDay",() => {
+        setDayState();
+      });
+      function setNightState() {
+        const body = document.body;
+        body.classList.add('night');
+      }
+      function setDayState() {
+        const body = document.body;
+        body.classList.remove('night');
+      }
       const villagersMessage = document.getElementsByClassName("villagers-win")[0];
       socket.on("winMessage", ()=> {
         requestAnimationFrame(() => {

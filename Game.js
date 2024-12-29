@@ -12,6 +12,18 @@ export class Game {
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
   }
+  
+  getCurrentPhase() {
+    return this.currentPhase;
+  }
+  
+  setDayPhase() {
+    this.currentPhase = "day";
+  }
+  
+  setNightPhase() {
+    this.currentPhase = "night"
+  }
 
   getCurrentTurn() {
     return this.turnSequence[this.currentTurnIndex];
@@ -23,31 +35,6 @@ export class Game {
       this.currentTurnIndex = 0;
     }
   }
-  // nextTurn() {
-  //   let attempts = 0; // Track the number of attempts
-  //   const maxAttempts = this.turnSequence.length; // Limit to one full loop through the sequence
-  
-  //   do {
-  //     this.currentTurnIndex = (this.currentTurnIndex + 1) % this.turnSequence.length;
-  //     const currentRole = this.getCurrentTurn();
-  //     const alivePlayersWithRole = this.players.filter(
-  //       (p) => p.isAlive && p.role.name === currentRole
-  //     );
-  
-  //     if (alivePlayersWithRole.length > 0) {
-  //       break; // Stop if there are alive players with the current role
-  //     }
-  
-  //     attempts += 1; // Increment the attempts counter
-  //   } while (attempts < maxAttempts);
-  
-  //   if (attempts === maxAttempts) {
-  //     console.log("No valid turns left. Skipping to the next phase or action.");
-  //     // Handle the case where no players with valid roles are alive
-  //     this.currentTurnIndex = 0; // Optionally reset to the start of the sequence
-  //   }
-  // }
-  
 
   addPlayer(player) {
     this.players.push(player);

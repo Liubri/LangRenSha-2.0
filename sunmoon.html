@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        /* .celestial-body-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+      } */
+
+      .celestial-body-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .celestial-body {
+        /* position: absolute; */
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #fbbf24;
+        /* top: 40px; */
+        /* left: 40px; */
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: transform, background, box-shadow;
+      }
+
+      .sun-ray {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 40px solid #fbbf24;
+        transform-origin: center bottom;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, transform;
+      }
+
+      .sun-ray:nth-child(1) { transform: translate(-50%, -100%) rotate(0deg); }
+      .sun-ray:nth-child(2) { transform: translate(-50%, -100%) rotate(45deg); }
+      .sun-ray:nth-child(3) { transform: translate(-50%, -100%) rotate(90deg); }
+      .sun-ray:nth-child(4) { transform: translate(-50%, -100%) rotate(135deg); }
+      .sun-ray:nth-child(5) { transform: translate(-50%, -100%) rotate(180deg); }
+      .sun-ray:nth-child(6) { transform: translate(-50%, -100%) rotate(225deg); }
+      .sun-ray:nth-child(7) { transform: translate(-50%, -100%) rotate(270deg); }
+      .sun-ray:nth-child(8) { transform: translate(-50%, -100%) rotate(315deg); }
+
+      body.night .celestial-body {
+        background: transparent;
+        box-shadow: inset 10px -10px 0 0 #94a3b8;
+        transform: rotate(20deg);
+      }
+
+      body.night .sun-ray {
+        opacity: 0;
+        transform: translate(-50%, -100%) rotate(var(--rotation)) scale(0);
+      }
+
+
+
+    body {
+        background-color: #7dd3fc;
+        transition: background-color 0.5s ease-in-out;
+    }
+
+
+    </style>
+</head>
+<body>
+    <button id="toggleBtn" class="toggle-btn">
+            Toggle Button
+      </button>
+    <div class="celestial-body-container">
+        <div class="sun-ray" style="--rotation: 0deg;"></div>
+        <div class="sun-ray" style="--rotation: 45deg;"></div>
+        <div class="sun-ray" style="--rotation: 90deg;"></div>
+        <div class="sun-ray" style="--rotation: 135deg;"></div>
+        <div class="sun-ray" style="--rotation: 180deg;"></div>
+        <div class="sun-ray" style="--rotation: 225deg;"></div>
+        <div class="sun-ray" style="--rotation: 270deg;"></div>
+        <div class="sun-ray" style="--rotation: 315deg;"></div>
+        <div class="celestial-body"></div>
+      </div>
+    </div>
+</body>
+    <script>
+    let isNight = false;
+    const body = document.body;
+    const toggleBtn = document.getElementById("toggleBtn");
+    function updateDayNightState() {
+        body.style.backgroundColor = isNight ? "#312e81" : "#7dd3fc";
+        body.classList.toggle('night', isNight);
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        isNight = !isNight;
+        updateDayNightState();
+      });
+    </script>
+</html>

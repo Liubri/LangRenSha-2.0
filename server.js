@@ -96,7 +96,12 @@ io.on("connection", (socket) => {
       game.startGame();
       io.emit("updateCurrentTurn", game.getCurrentTurn());
       io.emit("renderButtons");
+      io.emit("setNight");
     }
+  });
+  
+  socket.on("serverDay",() => {
+    io.emit("setDay");
   });
   
   socket.on("updateGameState", ()=> {

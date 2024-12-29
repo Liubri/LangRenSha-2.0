@@ -91,6 +91,7 @@ socket.on("updateCurrentTurn", (newTurn) => {
     }
     if(currentTurn === "vote") {
       console.log("CurrentTurn is voting");
+      socket.emit("serverDay");
       socket.emit("updateGameState");
     }
   }
