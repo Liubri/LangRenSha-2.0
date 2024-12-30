@@ -43,7 +43,15 @@ socket.on("renderButtons", () => {
 socket.on("startGame", () => {
   socket.emit("startGame");
   gameStarted = true;
+  console.log(currentPlayer.role.name);
+  console.log(typeof currentPlayer.role.name);
+  setTimeout(createRoleCard, 1000);
 });
+
+function createRoleCard() {
+  createCard(currentPlayer.role.name);
+  createButterflies(); 
+}
 
 function checkIfAlive() {
   const currentPlayerInList = players.find(
@@ -72,8 +80,8 @@ socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
   console.log("CurrentTurn:", currentTurn);
   //console.log("CurrentPlayer:", currentPlayer);
-  const currentTurnText = document.getElementById("currentTurnText");
-  currentTurnText.textContent = currentTurn;
+  // const currentTurnText = document.getElementById("currentTurnText");
+  // currentTurnText.textContent = `${currentTurn}`;
   renderButtons();
     // Check if the current player is alive
   //console.log("Role: ", currentPlayer.role.name);
@@ -127,15 +135,27 @@ function renderButtons() {
   // Check if the current player is alive
   const isPlayerAlive = currentPlayer && currentPlayer.isAlive;
 
-  const createButton = (text, className, action, isEnabled) => {
+  // Function to create a button with an icon
+  const createButton = (text, className, action, isEnabled, iconName) => {
     const button = document.createElement("button");
-    button.textContent = text;
     button.className = `action-button ${className}`;
     button.disabled = !isEnabled; // Disable or enable the button
+
+    // Create the icon element
+    const icon = document.createElement("i");
+    icon.dataset.lucide = iconName;
+    icon.className = "icon";
+
+    // Add the icon and text to the button
+    button.appendChild(icon);
+    const buttonText = document.createTextNode(` ${text}`);
+    button.appendChild(buttonText);
+
+    // Add the click event listener
     button.addEventListener("click", () => openModal(action));
     return button;
   };
-  
+
   const createPassTurn = (isEnabled) => {
     const button = document.createElement("button");
     button.textContent = "Pass Turn";
@@ -143,7 +163,7 @@ function renderButtons() {
     button.disabled = !isEnabled;
     button.addEventListener("click", () => passPlayerTurn());
     return button;
-  }
+  };
 
   const isVotingPhase = currentTurn === "vote";
 
@@ -151,31 +171,31 @@ function renderButtons() {
   if (isPlayerAlive) {
     if (currentPlayer.role.name === "Werewolf") {
       actionsDiv.appendChild(
-        createButton("Kill", "kill", "kill", currentTurn === "werewolf")
+        createButton("Kill", "kill", "kill", currentTurn === "werewolf", "skull")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Witch") {
       actionsDiv.appendChild(
-        createButton("Save", "save", "save", currentTurn === "witch" && witchHasMedicine)
+        createButton("Save", "save", "save", currentTurn === "witch" && witchHasMedicine, "beaker")
       );
       actionsDiv.appendChild(
-        createButton("Poison", "poison", "poison", currentTurn === "witch" && witchHasPoison)
+        createButton("Poison", "poison", "poison", currentTurn === "witch" && witchHasPoison, "zap")
       );
       actionsDiv.appendChild(createPassTurn(currentTurn === "witch"));
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Seer") {
       actionsDiv.appendChild(
-        createButton("Check", "check", "check", currentTurn === "seer")
+        createButton("Check", "check", "check", currentTurn === "seer", "eye")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Villager") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Jester") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "smile"));
     }
   } else {
     // If the player is dead, disable all action buttons
@@ -183,7 +203,11 @@ function renderButtons() {
     deadMessage.textContent = "You are dead and cannot perform any actions.";
     actionsDiv.appendChild(deadMessage);
   }
+
+  // Reinitialize Lucide icons to render
+  lucide.createIcons();
 }
+
 // Utility function to toggle buttons
 function toggleButtonsGlobally(isEnabled) {
   const buttons = document.querySelectorAll(".action-button");
@@ -455,4 +479,115 @@ function passPlayerTurn() {
   selectedPlayer = null;
   socket.emit("nextTurn");
   closeModal();
+}
+
+
+// Role Card
+const cardContainer = document.querySelector(".card-container");
+const wrapper = document.querySelector(".wrapper");
+const roleData = {
+  Seer: {
+    title: "预言家",
+    description: "好人阵营，神职",
+    ability: "每晚可以查看一名玩家的身份",
+    image: "../Seer Medium.jpeg",
+    background: "linear-gradient(45deg, #4a0e4e, #81379a)", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Werewolf: {
+    title: "狼人",
+    description: "狼人阵营，恶人",
+    ability: "每晚可以选择一名玩家进行攻击",
+    image: "../Werewolf.jpeg",
+    background: "linear-gradient(45deg, #ff0000, #990000)", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  // Add other roles here...
+  Witch: {
+    title: "女巫",
+    description: "好人阵营，神职",
+    ability: "每晚可以选择一名玩家进行复活或毒死",
+    image: "../Witch.jpeg",
+    background: "linear-gradient(45deg, #3b0e45, #8a6b99)", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Villager: {
+    title: "平民",
+    description: "好人",
+    ability: "无特殊技能",
+    image: "../Villager.jpeg",
+    background: "linear-gradient(45deg, #55b0c6, #9cd9ea)", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+};
+function createCard(role) {
+  if (!roleData || !roleData[role]) {
+    console.log("RoleNotFound: ", role);
+    console.error("Role not found!");
+    return;
+  }
+
+  const roleInfo = roleData[role];
+
+  // If role is not found, return early
+  if (!roleInfo) {
+    console.log("RoleNotFound: ", roleInfo);
+    console.error("Role not found!");
+    return;
+  }
+
+  // Generate card HTML dynamically
+  cardContainer.innerHTML = `
+    <div class="card" style="border: ${roleInfo.borderColor}">
+      <div class="card-face card-front" style="background: ${roleInfo.background}">
+        <div class="abilities">
+          <h2>${roleInfo.title}</h2>
+          <p><strong>身份：</strong>${roleInfo.description}</p>
+          <p><strong>技能：</strong>${roleInfo.ability}</p>
+        </div>
+        <div class="character-image">
+          <img src="${roleInfo.image}" alt="${roleInfo.title}" />
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Trigger the animation when card is created
+  startAnimation();
+}
+
+function startAnimation() {
+  cardContainer.classList.remove("hidden");
+  cardContainer.style.animation = "slideInFade 1s forwards";
+  const abilities = document.querySelector(".card-front .abilities");
+  const characterImage = document.querySelector(
+    ".card-front .character-image"
+  );
+  // Add slide-in animations to the text and image
+  abilities.classList.add("slide-text");
+  characterImage.classList.add("slide-img");
+  
+  cardContainer.addEventListener("animationend", (event) => {
+    if (event.animationName === "hideCard") {
+      // Hide the wrapper once the "hideCard" animation finishes
+      wrapper.style.display = "none";
+    }
+  });
+
+  // Trigger the hideCard animation after 5 seconds
+  setTimeout(() => {
+    cardContainer.style.animation = "hideCard 1s ease-in-out";
+  }, 5000); // After the flip animation
+}
+
+function createButterflies() {
+  const container = document.querySelector(".card-container");
+  for (let i = 0; i < 5; i++) {
+    const butterfly = document.createElement("div");
+    butterfly.classList.add("butterfly");
+    butterfly.style.left = `${Math.random() * 100}%`;
+    butterfly.style.top = `${Math.random() * 100}%`;
+    butterfly.style.animationDelay = `${Math.random() * 2}s`;
+    container.appendChild(butterfly);
+  }
 }

@@ -11,6 +11,25 @@ export class Game {
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
+    this.gameInProgress = false;
+  }
+  
+  resetGame() {
+    // Reset all game state properties to their initial values
+    this.nightActions = [];
+    this.seerCheckedPlayers = [];
+    this.playerVotes = [];
+    this.skipVotes = [];
+    this.logs = [];
+    this.currentPhase = "lobby"; // Reset to the lobby phase
+    this.turnSequence = ["werewolf", "witch", "seer", "vote"]; // Reset turn sequence
+    this.werewolvesChoice = [];
+    this.currentTurnIndex = 0;
+    this.voteMap = new Map();
+  }
+  
+  gamePlaying() {
+    return this.gameInProgress;
   }
   
   getCurrentPhase() {

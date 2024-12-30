@@ -30,7 +30,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pages", "login.html"));
 });
 
-let gameInProgress = false;
 let availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager()];
 
 function assignRole() {
@@ -87,11 +86,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("startGame", () => {
-    if (!gameInProgress) {
+    if (!game.gamePlaying()) {
       // Prevent re-triggering game start
       console.log("Game Started!");
       // startGameTimer(io, 15);
-      gameInProgress = true; // Set flag to indicate game has started
+      game.gameInProgress = true; // Set flag to indicate game has started
       io.emit("updatePlayers", game.getCurrentPlayers());
       game.startGame();
       io.emit("updateCurrentTurn", game.getCurrentTurn());
@@ -256,6 +255,7 @@ io.on("connection", (socket) => {
         } else {
           endMessage();
         }
+        io.emit("setNight");
       } else {
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
         io.emit("renderVoteResults");
@@ -264,6 +264,7 @@ io.on("connection", (socket) => {
         game.nextTurn();
         io.emit("updatePlayers", game.getCurrentPlayers());
         io.emit("updateCurrentTurn", game.getCurrentTurn());
+        io.emit("setNight");
       }
     }
   });

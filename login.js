@@ -8,9 +8,14 @@ function handleJoinRoom() {
   //   'input[placeholder="Enter Lobby ID"]'
   // ).value;
 
-  const playerInputs = document.querySelector(".player-inputs");
+  const playerInputs = document.querySelector(".container");
   if (playerInputs) {
     playerInputs.style.display = "none";
+  }
+  
+  const lobby = document.querySelector(".lobby");
+  if (lobby) {
+    lobby.classList.remove("hidden");
   }
   // Create a player object
   //const player = { id: 1, name: playerName, role: "Villager", isAlive: true };
@@ -19,16 +24,16 @@ function handleJoinRoom() {
   socket.emit("joinGame", playerName);
 }
 
-document.getElementById("lobbyType").addEventListener("change", function () {
-  const lobbyType = this.value;
-  if (lobbyType === "preconfigured") {
-    document.getElementById("preconfiguredLobbies").style.display = "block";
-    document.getElementById("customLobby").style.display = "none";
-  } else {
-    document.getElementById("preconfiguredLobbies").style.display = "none";
-    document.getElementById("customLobby").style.display = "block";
-  }
-});
+// document.getElementById("lobbyType").addEventListener("change", function () {
+//   const lobbyType = this.value;
+//   if (lobbyType === "preconfigured") {
+//     document.getElementById("preconfiguredLobbies").style.display = "block";
+//     document.getElementById("customLobby").style.display = "none";
+//   } else {
+//     document.getElementById("preconfiguredLobbies").style.display = "none";
+//     document.getElementById("customLobby").style.display = "block";
+//   }
+// });
 
 function createLobby() {
   const lobbyType = document.getElementById("lobbyType").value;
