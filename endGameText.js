@@ -40,6 +40,20 @@ function toggleBlur() {
     console.log("Blur toggled");
   }
 }
+function removeBlur() {
+  if (document.body.classList.contains('blur-everything')) {
+    document.body.classList.remove('blur-everything');
+    console.log("Blur removed");
+  }
+}
+
+socket.on("removeEndGameMessage", () => {
+  removeBlur();
+  villagersMessage.classList.add("hidden");
+  wolfMessage.classList.add("hidden");
+  jesterMessage.classList.add("hidden");
+  resetButton.classList.add("hidden");
+})
 
 const style = document.createElement("style");
 style.textContent = `

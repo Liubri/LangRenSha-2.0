@@ -4,11 +4,7 @@ import { Server } from "socket.io";
 import path from "path";
 import { Game } from "./Game.js"; // Use .js extension for local modules
 import { Player } from "./Player.js";
-import { Werewolf } from "./roles/Werewolf.js";
-import { Villager } from "./roles/Villager.js";
-import { Witch } from "./roles/Witch.js";
-import { Seer } from "./roles/Seer.js";
-import { Jester } from "./roles/Jester.js";
+
 
 const app = express();
 const server = http.createServer(app);
@@ -30,21 +26,21 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "pages", "login.html"));
 });
 
-let availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager()];
+// let availableRoles = [];
 
-function assignRole() {
-  if (availableRoles.length === 0) {
-    return undefined; // No roles left to assign
-  }
-  if (preConfigRoles.length > 0) {
-    availableRoles = preConfigRoles;
-  }
-  const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
-  const role = availableRoles[randomIndex]; // Get the role
-  availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
-  console.log("Available roles after assignment:", availableRoles);
-  return role; // Return the selected role
-}
+// function assignRole() {
+//   if (availableRoles.length === 0) {
+//     return undefined; // No roles left to assign
+//   }
+//   if (preConfigRoles.length > 0) {
+//     availableRoles = preConfigRoles;
+//   }
+//   const randomIndex = Math.floor(Math.random() * availableRoles.length); // Pick a random index
+//   const role = availableRoles[randomIndex]; // Get the role
+//   availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
+//   console.log("Available roles after assignment:", availableRoles);
+//   return role; // Return the selected role
+// }
 
 let countDown = [];
 let config;
@@ -67,12 +63,12 @@ function createPreConfig() {
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   socket.on("joinGame", (playerName) => {
-    const playerRole = assignRole();
+    const playerRole = game.assignRole();
     const player = new Player(playerName, playerRole);
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
     socket.emit("playerJoined", player);
-    if (availableRoles.length == 0) {
+    if (game.getAvailableRoles() == 0) {
       io.emit("startGame");
       console.log("StarGame Called");
     }
@@ -107,6 +103,7 @@ io.on("connection", (socket) => {
     console.log("UpdateGameState called");
     io.emit("updatePlayers", game.getCurrentPlayers());
     io.emit("renderButtons");
+    io.emit("roleActionsDuringVote");
     endMessage();
   });
 
@@ -143,7 +140,7 @@ io.on("connection", (socket) => {
     //console.log(`[SERVER] All intervals cleared. Updated intervals:`, countDown);
   }
 
-  socket.on("clearrAllTime", () => {
+  socket.on("clearAllTime", () => {
     clearAllIntervals();
   });
 
@@ -169,9 +166,9 @@ io.on("connection", (socket) => {
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updateGrid");
-    if (game.checkGameOver() == "Good wins") {
-      io.emit("winMessage");
-    }
+    // if (game.checkGameOver() == "Good wins") {
+    //   io.emit("winMessage");
+    // }
   });
 
   let buttonsEnabled = false;
@@ -183,18 +180,31 @@ io.on("connection", (socket) => {
   socket.on("seerAction", (targetId) => {
     const target = game
       .getCurrentPlayers()
-      .find((player) => player.id === targetId && player.isAlive);
+      .find((player) => player.id === targetId);
     if (target) {
       game.addSeerCheckedPlayer(target.id);
     }
-    //console.log(game.getSeerChecked());
+    // console.log(game.getSeerChecked());
     io.emit("updateSeerChecked", game.getSeerChecked());
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updateGrid");
     //io.emit("updatePlayers", game.getCurrentPlayers());
   });
+  
+  socket.on("hunterAction", (targetId) => {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.id === targetId && player.isAlive);
+    if(target) {
+      target.isAlive = false;
+    }
+    io.emit("updatePlayers", game.getCurrentPlayers()); 
+    io.emit("renderButtons");
+    endMessage();
+  })
 
+  //Remember to clear this when the game is reset
   let werewolfSelections = {};
   socket.on("werewolfTarget", ({ werewolfId, targetId }) => {
     werewolfSelections[werewolfId] = targetId;
@@ -335,6 +345,17 @@ io.on("connection", (socket) => {
   function canPerformAction(player) {
     return player.isAlive && !player.state.isAsleep;
   }
+  
+  socket.on("resetGame", () => {
+    game.gameInProgress = false; 
+    console.log("ResetGame called");
+    game.resetGame();
+    game.reassignRoles();
+    console.log("ResetGame Players: ", game.getCurrentPlayers());
+    io.emit("removeEndGameMessage");
+    io.emit("setNight");
+    io.emit("startGame")
+  });
 
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);

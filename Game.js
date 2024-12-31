@@ -1,3 +1,9 @@
+import { Werewolf } from "./roles/Werewolf.js";
+import { Villager } from "./roles/Villager.js";
+import { Witch } from "./roles/Witch.js";
+import { Seer } from "./roles/Seer.js";
+import { Hunter } from "./roles/Hunter.js";
+import { Jester } from "./roles/Jester.js";
 export class Game {
   constructor() {
     this.players = [];
@@ -12,20 +18,55 @@ export class Game {
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
+    this.availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager(), new Hunter()];
+  }
+  
+  assignRole() {
+    const randomIndex = Math.floor(Math.random() * this.availableRoles.length); // Pick a random index
+    const role = this.availableRoles[randomIndex]; // Get the role
+    this.availableRoles.splice(randomIndex, 1); // Remove the assigned role from the array
+    console.log("Available roles after assignment:", this.availableRoles);
+    return role; // Return the selected role
+  }
+  
+  getAvailableRoles() {
+    return this.availableRoles.length;
+  }
+  
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+  reassignRoles() {
+    // Shuffle the roles array
+    this.shuffleArray(this.availableRoles);
+    console.log("GameRoles: ", this.availableRoles);
+  
+    // Assign each player a role
+    this.players.forEach((player, index) => {
+      console.log(`Assigned role ${player.role ? player.role.getName() : "undefined"} to ${player.name}`);
+      player.role = this.availableRoles[index];
+    });
   }
   
   resetGame() {
     // Reset all game state properties to their initial values
+    this.availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager()];
     this.nightActions = [];
     this.seerCheckedPlayers = [];
     this.playerVotes = [];
     this.skipVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // Reset to the lobby phase
-    this.turnSequence = ["werewolf", "witch", "seer", "vote"]; // Reset turn sequence
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
+    this.gameInProgress = false;
+    this.players.forEach((player) => {
+      player.isAlive = true;
+    });
   }
   
   gamePlaying() {

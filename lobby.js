@@ -15,11 +15,17 @@ const playersHardCoded = [
 // renderPlayersGrid();
 socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
+  if (currentPlayer) {
+    const updatedCurrentPlayer = players.find((p) => p.id === currentPlayer.id);
+    if (updatedCurrentPlayer) {
+      currentPlayer = updatedCurrentPlayer; // Sync currentPlayer with the updated data
+    }
+  }
   //console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
-  if (gameStarted) {
-    checkIfAlive();
-  }
+  // if (gameStarted) {
+  //   checkIfAlive();
+  // }
   //checkStartGame();
 });
 
@@ -43,8 +49,8 @@ socket.on("renderButtons", () => {
 socket.on("startGame", () => {
   socket.emit("startGame");
   gameStarted = true;
-  console.log(currentPlayer.role.name);
-  console.log(typeof currentPlayer.role.name);
+  // console.log(currentPlayer.role.name);
+  // console.log(typeof currentPlayer.role.name);
   setTimeout(createRoleCard, 1000);
 });
 
@@ -60,7 +66,7 @@ function checkIfAlive() {
   if (currentPlayerInList) {
     if (!currentPlayerInList.isAlive) {
       currentPlayer.isAlive = false; // Update currentPlayer status
-      console.log(`${currentPlayer.name} is now dead.`);
+      // console.log(`${currentPlayer.name} is now dead.`);
     }
   }
 }
@@ -98,10 +104,20 @@ socket.on("updateCurrentTurn", (newTurn) => {
       }
     }
     if(currentTurn === "vote") {
-      console.log("CurrentTurn is voting");
+      // console.log("CurrentTurn is voting");
       socket.emit("serverDay");
       socket.emit("updateGameState");
+      // console.log("CurrentRole: ", currentPlayer.role.name);
+      // console.log("CurrentStatus: ", currentPlayer.isAlive);
     }
+  }
+});
+
+socket.on("roleActionsDuringVote", () => {
+  console.log("CurrentStatus2: ", currentPlayer.isAlive);
+  if(currentPlayer.role.name == "Hunter" && currentPlayer.isAlive == false) {
+    console.log("HunterFunctionCalled");
+    openModal('shoot');
   }
 });
 
@@ -195,7 +211,10 @@ function renderButtons() {
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Jester") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "smile"));
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+    }
+    if (currentPlayer.role.name === "Hunter") {
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
   } else {
     // If the player is dead, disable all action buttons
@@ -244,7 +263,7 @@ function renderPlayersGrid() {
     let playerRole;
     if (gameStarted) {
       if (currentPlayer.role.name === "Seer") {
-        //console.log("SeerChecked", seerCheckedPlayers);
+        console.log("SeerChecked", seerCheckedPlayers);
         if (seerCheckedPlayers.includes(player.id)) {
           if (player.role.alignment === "good") {
             playerRole = "Good";
@@ -333,6 +352,10 @@ function openModal(action) {
     case "check":
       modalTitle.textContent = "Choose a Player to Check";
       actionButton.textContent = "Check ID";
+      break;
+    case "shoot":
+      modalTitle.textContent = "Choose a Player to Eliminate";
+      actionButton.textContent = "Shoot"
       break;
   }
   adjustButtonSizes();
@@ -457,6 +480,9 @@ actionButton.addEventListener("click", () => {
       case "check":
         socket.emit("seerAction", id);
         break;
+      case "shoot":
+        socket.emit("hunterAction", id);
+        break;
     }
     //socket.emit("turnEndedBeforeTimer");
     this.currentAction = null;
@@ -509,6 +535,14 @@ const roleData = {
     ability: "每晚可以选择一名玩家进行复活或毒死",
     image: "../Witch.jpeg",
     background: "linear-gradient(45deg, #3b0e45, #8a6b99)", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Hunter: {
+    title: "猎人",
+    description: "好人阵营，神职",
+    ability: "死亡时可以选择开枪射杀一名玩家",
+    image: "../Hunter.jpeg",
+    background: "linear-gradient(45deg,rgb(132, 139, 55),rgb(181, 201, 34))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {
@@ -590,4 +624,10 @@ function createButterflies() {
     butterfly.style.animationDelay = `${Math.random() * 2}s`;
     container.appendChild(butterfly);
   }
+}
+
+
+function resetGame() {
+  gameStarted = false;
+  socket.emit("resetGame");
 }
