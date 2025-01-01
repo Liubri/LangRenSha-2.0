@@ -28,9 +28,13 @@ export class Player {
   getRoleAlignment() {
     return this.role.alignment;
   }
+  
+  canPerformAction() {
+    return this.isAlive && !this.state.isAsleep;
+  }
 
   kill() {
-    if (this.isAlive) {
+    if (this.canPerformAction()) {
       this.isAlive = false;
       if (
         this.state.isLinked &&

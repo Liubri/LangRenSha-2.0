@@ -4,6 +4,7 @@ import { Witch } from "./roles/Witch.js";
 import { Seer } from "./roles/Seer.js";
 import { Hunter } from "./roles/Hunter.js";
 import { Jester } from "./roles/Jester.js";
+import { DreamKeeper } from "./roles/DreamKeeper.js";
 export class Game {
   constructor() {
     this.players = [];
@@ -13,12 +14,12 @@ export class Game {
     this.skipVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
-    this.turnSequence = ["werewolf", "witch", "seer", "vote"];
+    this.turnSequence = ["dreamkeeper", "werewolf", "witch", "seer", "vote"];
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
-    this.availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager(), new Hunter()];
+    this.availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager(), new DreamKeeper()];
   }
   
   assignRole() {
@@ -135,7 +136,7 @@ export class Game {
     const villagers = this.players.filter(
       (p) => p.isAlive && p.role.name === "Villager"
     );
-    console.log("AliveWerewolves: ", aliveWerewolves);
+    console.log("AliveWerewolves: ", aliveWerewolves.length);
     if (aliveWerewolves.length === 0) {
       //console.log("Good wins");
       return "Good wins";

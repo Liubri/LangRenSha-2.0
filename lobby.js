@@ -106,7 +106,9 @@ socket.on("updateCurrentTurn", (newTurn) => {
     if(currentTurn === "vote") {
       // console.log("CurrentTurn is voting");
       socket.emit("serverDay");
-      socket.emit("updateGameState");
+      if(currentPlayer.id == 1) {
+        socket.emit("updateGameState");
+      }
       // console.log("CurrentRole: ", currentPlayer.role.name);
       // console.log("CurrentStatus: ", currentPlayer.isAlive);
     }
@@ -214,6 +216,12 @@ function renderButtons() {
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
     if (currentPlayer.role.name === "Hunter") {
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+    }
+    if (currentPlayer.role.name === "DreamKeeper") {
+      actionsDiv.appendChild(
+        createButton("Sleep", "sleep", "sleep", currentTurn === "dreamkeeper", "bed")
+      );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
   } else {
@@ -357,6 +365,10 @@ function openModal(action) {
       modalTitle.textContent = "Choose a Player to Eliminate";
       actionButton.textContent = "Shoot"
       break;
+    case "sleep":
+      modalTitle.textContent = "Choose a Player to put to Sleep";
+      actionButton.textContent = "Put to Sleep"
+      break;
   }
   adjustButtonSizes();
   renderPlayersSmallGrid();
@@ -483,6 +495,9 @@ actionButton.addEventListener("click", () => {
       case "shoot":
         socket.emit("hunterAction", id);
         break;
+      case "sleep":
+        socket.emit("putToSleep", id);
+        break;
     }
     //socket.emit("turnEndedBeforeTimer");
     this.currentAction = null;
@@ -543,6 +558,14 @@ const roleData = {
     ability: "死亡时可以选择开枪射杀一名玩家",
     image: "../Hunter.jpeg",
     background: "linear-gradient(45deg,rgb(132, 139, 55),rgb(181, 201, 34))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  DreamKeeper: {
+    title: "摄梦人",
+    description: "好人阵营，神职",
+    ability: "每晚选择一名玩家成为梦游者，梦游者免疫夜间伤害且不知道自己在梦游。若摄梦人出局，梦游者也会出局；连续两晚成为梦游者则会出局",
+    image: "../DreamKeeper.jpeg",
+    background: "linear-gradient(45deg,rgb(97, 33, 120),rgb(117, 29, 147))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {
@@ -616,6 +639,9 @@ function startAnimation() {
 
 function createButterflies() {
   const container = document.querySelector(".card-container");
+  // Remove existing butterflies
+  const existingButterflies = container.querySelectorAll(".butterfly");
+  existingButterflies.forEach(butterfly => butterfly.remove());
   for (let i = 0; i < 5; i++) {
     const butterfly = document.createElement("div");
     butterfly.classList.add("butterfly");
@@ -624,6 +650,26 @@ function createButterflies() {
     butterfly.style.animationDelay = `${Math.random() * 2}s`;
     container.appendChild(butterfly);
   }
+}
+
+function onHover() {
+  const abilities = document.querySelector(".card-front .abilities");
+  const characterImage = document.querySelector(
+    ".card-front .character-image"
+  );
+  if(gameStarted) {
+    abilities.classList.remove("slide-text");
+    characterImage.classList.remove("slide-img");
+  }
+  wrapper.style.display = "block";
+  cardContainer.style.opacity = "1";
+  cardContainer.style.animation = "showCard .5s ease-in-out forwards";
+  createButterflies();
+}
+
+function hideCard() {
+  cardContainer.style.opacity = "0";
+  cardContainer.style.animation = "hideCard .5s ease-in-out";
 }
 
 

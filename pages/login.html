@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="../timer.css">
     <link rel="stylesheet" href="../sun.css">
     <link rel="stylesheet" href="../roleCard.css">
-    <link rel="stylesheet" href="../login.css">
+    <!-- <link rel="stylesheet" href="../login.css"> -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
     <style>
       body {
@@ -196,7 +196,7 @@
           <div class="sun-ray" style="--rotation: 315deg;"></div>
           <div class="celestial-body"></div>
         </div>
-        <button id="seeCard" onclick="createCard('Werewolf')">startAnimation</button>
+        <button id="seeCard" onmouseover="onHover()" onmouseout="hideCard()">See Card</button>
       </div>
     <!--Player Grid-->
     <div class="player-grid" id="mainPlayerGrid">

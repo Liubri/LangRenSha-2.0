@@ -3,7 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import path from "path";
 import { Game } from "./Game.js"; // Use .js extension for local modules
-import { Player } from "./Player.js";
+import { Player } from "./player.js";
 
 
 const app = express();
@@ -101,7 +101,18 @@ io.on("connection", (socket) => {
   
   socket.on("updateGameState", ()=> {
     console.log("UpdateGameState called");
+    // console.log("UGS: ", game.getCurrentPlayers());
+    game.getCurrentPlayers().forEach(player => {
+      if(player.role.name == "DreamKeeper" && !player.isAlive) {
+        const target = game.getCurrentPlayers().filter((player) => player.state.isAsleep)[0];
+        target.isAlive = false;
+        game.getCurrentPlayers().forEach(player => {
+          player.state.isAsleep = false;
+        });
+      }
+    });
     io.emit("updatePlayers", game.getCurrentPlayers());
+    // console.log("UGS Sleep: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
     io.emit("renderButtons");
     io.emit("roleActionsDuringVote");
     endMessage();
@@ -228,7 +239,32 @@ io.on("connection", (socket) => {
       //io.emit("updatePlayers", game.getCurrentPlayers());
     }
   });
-
+  
+  socket.on("putToSleep", (targetId) => {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.id === targetId && player.isAlive);
+    game.getCurrentPlayers().forEach(player => {
+      if(player.id === targetId) {
+        if(player.state.isAsleep) {
+          target.isAlive = false;
+        } else {
+          player.state.isAsleep = true;
+        }
+      } else {
+        player.state.isAsleep = false;
+      }
+    });
+    // if(target.state.isAsleep) {
+    //   target.isAlive = false;
+    // } else {
+    //   target.state.isAsleep = true;
+    // }
+    console.log("SleepTargets: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn());
+  });
+  
   socket.on("votePlayerOut", ({ voteType, targetId }) => {
     if (voteType == "skip") {
       game.addSkipVote(targetId);
