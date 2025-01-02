@@ -29,6 +29,18 @@ socket.on("updatePlayers", (updatedPlayers) => {
   //checkStartGame();
 });
 
+socket.on("syncPlayers", (updatedPlayers) => {
+  players = updatedPlayers;
+  if (currentPlayer) {
+    const updatedCurrentPlayer = players.find((p) => p.id === currentPlayer.id);
+    if (updatedCurrentPlayer) {
+      currentPlayer = updatedCurrentPlayer; // Sync currentPlayer with the updated data
+      console.log("Synced CurrentPlayer", currentPlayer);
+    }
+  }
+  console.log("Synced Players: ", players);
+})
+
 socket.on("updateGrid", () => {
   renderPlayersGrid();
 });
@@ -122,6 +134,24 @@ socket.on("roleActionsDuringVote", () => {
     openModal('shoot');
   }
 });
+
+// socket.on("revealRole", (playerId) => {
+//   console.log("LobbyRevealRole Called");
+//   const playerCards = mainPlayerGrid.children;
+//   const player = players.find((p) => p.id === playerId);
+//   Array.from(playerCards).forEach(playerCard => {
+//     const playerIdElement = playerCard.querySelector('.player-id');
+//     if (playerIdElement && playerIdElement.textContent == playerId) {
+//     //   playerCard.innerHTML = `
+//     //   <i data-lucide="user"></i>
+//     //   <div class="player-name">${player.name}</div>
+//     //   <div class="player-role">${player.role.name}</div>
+//     //   <div class="player-id" style="display: none;">${player.id}</div>
+//     // `;
+//     playerCard.classList.add("fullFlip");
+//     }
+//   });
+// });
 
 function isActionAllowed(role, currentTurn) {
   return role === currentTurn;
@@ -224,6 +254,16 @@ function renderButtons() {
       );
       actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
     }
+    if (currentPlayer.role.name === "Fool") {
+      console.log("isFlipped: ", currentPlayer.state.isFlipped);
+      if(currentPlayer.state.hasFlipped == true) {
+        const deadMessage = document.createElement("p");
+        deadMessage.textContent = "You cannot perform any actions.";
+        actionsDiv.appendChild(deadMessage);
+        return;
+      }
+      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+    }
   } else {
     // If the player is dead, disable all action buttons
     const deadMessage = document.createElement("p");
@@ -259,14 +299,16 @@ function renderPlayersGrid() {
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
-
+    console.log('hasFlipped: ${player.name}', player.state.hasFlipped);
+    if(player.state.hasFlipped == true && playerCard.classList.contains("fullFlip")){
+      playerCard.classList.remove("fullFlip");
+    }
     // Add player status (alive or dead)
     if (player.isAlive) {
       playerCard.className = "player-card";
     } else {
       playerCard.className = "player-card dead";
     }
-
     // Determine player role visibility
     let playerRole;
     if (gameStarted) {
@@ -286,7 +328,11 @@ function renderPlayersGrid() {
       } else if (currentPlayer.id === player.id) {
         playerRole = player.role.name; // Show the current player's role if not Seer
       } else {
-        playerRole = ""; // Hide roles for others when the game is started
+        if(player.state.isFlipped == true) {
+          playerRole = player.role.name;
+        } else {
+          playerRole = ""; // Hide roles for others when the game is started
+        }
       }
     } else {
       playerRole = "Role hidden"; // Before the game starts, show "Role hidden"
@@ -297,7 +343,13 @@ function renderPlayersGrid() {
           <i data-lucide="user"></i>
           <div class="player-name">${player.name}</div>
           <div class="player-role">${playerRole}</div>
+          <div class="player-id" style="display: none;">${player.id}</div>
      `;
+    if (player.state.isFlipped == true && player.state.hasFlipped == false) {
+      playerCard.classList.add("fullFlip");
+      player.state.hasFlipped = true; // Mark as flipped
+      socket.emit("updatePlayerFlipped", player.id);
+    }
     if (gameStarted) {
       if (
         currentPlayer.role.name === "Witch" &&
@@ -566,6 +618,14 @@ const roleData = {
     ability: "每晚选择一名玩家成为梦游者，梦游者免疫夜间伤害且不知道自己在梦游。若摄梦人出局，梦游者也会出局；连续两晚成为梦游者则会出局",
     image: "../DreamKeeper.jpeg",
     background: "linear-gradient(45deg,rgb(97, 33, 120),rgb(117, 29, 147))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Fool: {
+    title: "白痴",
+    description: "好人阵营，神职",
+    ability: "被投票出局时翻牌免疫放逐，仅限一次，不能投票但可发言，需狼人击杀才能死亡。",
+    image: "../Fool.jpeg",
+    background: "linear-gradient(45deg,rgb(165, 189, 45),rgb(169, 181, 83))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {

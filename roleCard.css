@@ -152,6 +152,15 @@ p {
   }
 }
 
+@keyframes fullFlipCard {
+  0% {
+    transform: rotateY(0);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
 /* Classes for triggering animations */
 .slide-in {
   animation: slideInFade 1s forwards;
@@ -161,6 +170,10 @@ p {
 }
 .enlarge {
   animation: enlarge 0.8s ease-in-out forwards;
+}
+
+.fullFlip {
+  animation: fullFlipCard 0.6s forwards;
 }
 
 @keyframes slideInLeft {

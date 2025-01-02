@@ -106,9 +106,9 @@ io.on("connection", (socket) => {
       if(player.role.name == "DreamKeeper" && !player.isAlive) {
         const target = game.getCurrentPlayers().filter((player) => player.state.isAsleep)[0];
         target.isAlive = false;
-        game.getCurrentPlayers().forEach(player => {
-          player.state.isAsleep = false;
-        });
+        // game.getCurrentPlayers().forEach(player => {
+        //   player.state.isAsleep = false;
+        // });
       }
     });
     io.emit("updatePlayers", game.getCurrentPlayers());
@@ -159,7 +159,7 @@ io.on("connection", (socket) => {
     console.log("TimerEndedByTurn");
     startGameTimer(io, 15);
   });
-
+  
   socket.on("witchAction", ({ actionType, targetId }) => {
     const target = game
       .getCurrentPlayers()
@@ -265,6 +265,18 @@ io.on("connection", (socket) => {
     io.emit("updateCurrentTurn", game.getCurrentTurn());
   });
   
+  socket.on("updatePlayerFlipped", (targetId) => {
+    const target = game
+    .getCurrentPlayers()
+    .find((player) => player.id === targetId);
+    game.getCurrentPlayers().forEach(player => {
+      if(player.id === target.id) {
+        target.state.hasFlipped = true
+      }
+    });
+    // console.log("updatePlayerFlipped: ", game.getCurrentPlayers().filter((player) => player.state.hasFlipped));
+  });
+  
   socket.on("votePlayerOut", ({ voteType, targetId }) => {
     if (voteType == "skip") {
       game.addSkipVote(targetId);
@@ -273,34 +285,44 @@ io.on("connection", (socket) => {
     }
     //console.log("VoteMap: ", game.getVoteMap());
     //console.log("AlivePlayers: ", game.getAlivePlayers());
+    console.log("Fool Current Players", game.getCurrentPlayers());
+    console.log("Fool Vote: ", game.getCurrentPlayers().find(player => player.role.name === "Fool" && player.isAlive));
     if (
       game.getPlayerVotes().length + game.getPlayerSkips().length ===
-      game.getAlivePlayers().length
+      game.getAlivePlayers().length - (game.getCurrentPlayers().find(player => player.role.name === "Fool" && player.isAlive && player.state.isFlipped == true) ? 1 : 0)
     ) {
       if (game.countVotes() > 0) {
         //console.log("Emitting voteMap:", game.getVoteMap());
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
+        // console.log("GroupVoteMap: ", groupVotesMap());
+        // console.log("MostVoted: ", getMostVotes().voters);
         io.emit("renderVoteResults");
         const target = game
           .getCurrentPlayers()
           .find((player) => player.id === game.countVotes() && player.isAlive);
         //console.log("PlayerVotes: ", game.getPlayerVotes());
         //console.log("PlayerSkips: ", game.getPlayerSkips());
-        console.log("targetType: ", typeof target);
-        target.kill();
+        // console.log("targetType: ", typeof target);
+        target.isAlive = false;
         game.clearVotes();
         //console.log("PlayerVotes AfterClear: ", game.getPlayerVotes());
         //console.log("PlayerSkips AfterClear: ", game.getPlayerSkips());
-        game.nextTurn();
-        io.emit("updatePlayers", game.getCurrentPlayers());
-        io.emit("updateCurrentTurn", game.getCurrentTurn());
-        console.log("Target: ", target);
+        // console.log("Target: ", target);
         if (target && target.role.name === "Jester") {
           console.log("JesterWins Called");
           io.emit("jesterWins");
+        } else if (target && target.role.name === "Fool" && target.state.isFlipped == false) {
+          console.log("TargetFool Called");
+          target.state.isFlipped = true;
+          target.isAlive = true;
+          // io.emit("revealRole", target.id);
         } else {
           endMessage();
         }
+        game.nextTurn();
+        // io.emit("syncPlayers", game.getCurrentPlayers());
+        io.emit("updatePlayers", game.getCurrentPlayers());
+        io.emit("updateCurrentTurn", game.getCurrentTurn());
         io.emit("setNight");
       } else {
         io.emit("sendVoteMap", Object.fromEntries(groupVotesMap()));
@@ -345,7 +367,7 @@ io.on("connection", (socket) => {
         .getCurrentPlayers()
         .find((player) => player.id === targetId && player.isAlive);
     }
-    game.setVoteMap(voter.name, target);
+    game.setVoteMap(voter, target);
   });
 
   let groupedVotesMap = new Map();
@@ -364,6 +386,19 @@ io.on("connection", (socket) => {
       }
     }
     return groupedVotesMap;
+  }
+  
+  function getMostVotes() {
+    let mostVotedTarget = null;
+    let mostVotes = 0;
+  
+    for (const [targetId, { voters }] of groupedVotesMap) {
+      if (voters.length > mostVotes) {
+        mostVotedTarget = groupedVotesMap.get(targetId);
+        mostVotes = voters.length;
+      }
+    }
+    return mostVotedTarget;
   }
 
   function linkPlayers(targetId1, targetId2) {

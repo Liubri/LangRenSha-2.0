@@ -5,6 +5,7 @@ import { Seer } from "./roles/Seer.js";
 import { Hunter } from "./roles/Hunter.js";
 import { Jester } from "./roles/Jester.js";
 import { DreamKeeper } from "./roles/DreamKeeper.js";
+import { Fool } from "./roles/Fool.js";
 export class Game {
   constructor() {
     this.players = [];
@@ -14,12 +15,13 @@ export class Game {
     this.skipVotes = [];
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
-    this.turnSequence = ["dreamkeeper", "werewolf", "witch", "seer", "vote"];
+    // this.turnSequence = ["werewolf", "witch", "seer", "vote"];
+    this.turnSequence = ["werewolf", "witch", "vote"];
     this.werewolvesChoice = [];
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
-    this.availableRoles = [new Witch(), new Werewolf(), new Seer(), new Villager(), new DreamKeeper()];
+    this.availableRoles = [new Witch(), new Werewolf(), new Villager(), new Fool()];
   }
   
   assignRole() {

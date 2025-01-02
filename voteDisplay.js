@@ -79,7 +79,7 @@ function renderGroupedVotes(groupedVotesMap) {
       voters.forEach((voter) => {
         const voterDiv = document.createElement("div");
         voterDiv.className = "vote-item";
-        voterDiv.textContent = voter;
+        voterDiv.textContent = voter.name;
         groupDiv.appendChild(voterDiv);
       });
 
@@ -97,7 +97,7 @@ function renderGroupedVotes(groupedVotesMap) {
     skippedVotes.forEach((voter) => {
       const skipItem = document.createElement("div");
       skipItem.className = "skipped-item";
-      skipItem.textContent = voter;
+      skipItem.textContent = voter.name;
       skippedVotesContainer.appendChild(skipItem);
     });
   }
