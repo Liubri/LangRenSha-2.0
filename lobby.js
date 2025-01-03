@@ -234,7 +234,7 @@ function renderButtons() {
           "poison",
           "Mpoison",
           currentTurn === currPlayerTurn,
-          "zap"
+          "skull"
         )
       );
     }
@@ -352,6 +352,14 @@ function renderButtons() {
       );
       actionsDiv.appendChild(
         createButton("Guard", "guard", "giveGuard", currentTurn == "merchant", "shield")
+      );
+    }
+    if (currentPlayer.role.name === "WolfBeauty") {
+      actionsDiv.appendChild(
+        createButton("Charm", "charm", "charm", currentTurn == "wolfbeauty", "heart")
+      );
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
       );
     }
     if (currentPlayer.role.name === "Fool") {
@@ -490,11 +498,11 @@ const skipVoteButton = document.getElementById("skipVote");
 const cancelSkill = document.getElementById("cancelSkill");
 
 let currentAction = null;
-let selectedPlayer = null;
+let selectedPlayers = [];
 
 function openModal(action) {
   currentAction = action;
-  selectedPlayer = null;
+  selectedPlayers = [];
   actionButton.disabled = true;
   skipVoteButton.classList.add("hidden");
   cancelSkill.classList.add("hidden");
@@ -559,6 +567,10 @@ function openModal(action) {
       modalTitle.textContent = "Choose a Player to Give Guard Protection";
       actionButton.textContent = "Give Guard";
       break;
+    case "charm":
+      modalTitle.textContent = "Choose a Player to Charm";
+      actionButton.textContent = "Charm";
+      break;
   }
   adjustButtonSizes();
   renderPlayersSmallGrid();
@@ -613,9 +625,10 @@ function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
   const alivePlayers = players.filter((player) => player.isAlive);
   alivePlayers.forEach((player) => {
+    const isSelected = selectedPlayers.includes(player.id);
     const playerElement = document.createElement("div");
     playerElement.className = `player ${player.isAlive ? "" : "dead"} ${
-      selectedPlayer === player.id ? "selected" : ""
+      isSelected ? "selected" : ""
     }`;
     playerElement.innerHTML = `
       <i data-lucide="user" class="${
@@ -623,7 +636,7 @@ function renderPlayersSmallGrid() {
       }"></i>
       <span class="player-name">${player.name}</span>
       ${
-        selectedPlayer === player.id
+        isSelected
           ? '<i data-lucide="check" class="check-icon"></i>'
           : ""
       }`;
@@ -652,19 +665,58 @@ function renderPlayersSmallGrid() {
 }
 
 function selectPlayer(playerId) {
-  selectedPlayer = playerId;
-  const { id } = players.find((player) => player.id === selectedPlayer);
-  const werewolfId = currentPlayer.id;
+  const selectionLimit = getSelectionLimitByRole(currentPlayer.role.name);
+  
+  if (selectedPlayers.includes(playerId)) {
+    // If the player is already selected, deselect them
+    selectedPlayers = selectedPlayers.filter((id) => id !== playerId);
+  } else {
+    if (selectionLimit === 1) {
+      // For roles that allow only one selection, clear previous selections
+      selectedPlayers = [playerId];
+    } else {
+      // For roles with multiple selections, add the new selection if within the limit
+      if (selectedPlayers.length < selectionLimit) {
+        selectedPlayers.push(playerId);
+      } else {
+        // Replace the oldest selection with the new one if limit is reached
+        selectedPlayers.shift(); // Remove the first selected player
+        selectedPlayers.push(playerId);
+      }
+    }
+  }
   renderPlayersSmallGrid();
-  actionButton.disabled = false;
-  if (currentPlayer.role.name === "Werewolf") {
-    socket.emit("werewolfTarget", { werewolfId: werewolfId, targetId: id });
+  actionButton.disabled = selectedPlayers.length < selectionLimit;
+
+  if(selectedPlayers.length == 1) {
+    const { id } = players.find((player) => player.id === selectedPlayers[0]);
+    const werewolfId = currentPlayer.id;
+    renderPlayersSmallGrid();
+    if (currentPlayer.role.name === "Werewolf") {
+      socket.emit("werewolfTarget", { werewolfId: werewolfId, targetId: id });
+    }
   }
 }
 
+function getSelectionLimitByRole(roleName) {
+  const roleLimits = {
+    Werewolf: 1,
+    Seer: 1,
+    AwakenedSeer: 2,
+    Witch: 1,
+    // Add more roles and limits here
+  };
+  return roleLimits[roleName] || 1; // Default to 1 if the role isn't listed
+}
+
+
 actionButton.addEventListener("click", () => {
-  if (selectedPlayer) {
-    const { id } = players.find((player) => player.id === selectedPlayer);
+  if (selectedPlayers.length > 0) {
+    // const playerId = selectedPlayers.map((playerId) => {
+    //   const { id } = players.find((player) => player.id === playerId);
+    //   return id;
+    // });
+    const { id } = players.find((player) => player.id === selectedPlayers[0]);
     switch (currentAction) {
       case "vote":
         socket.emit("voterData", { voterId: currentPlayer.id, targetId: id });
@@ -708,6 +760,9 @@ actionButton.addEventListener("click", () => {
         break;
       case "giveGuard":
         socket.emit("merchantAction", { actionType: "guard", targetId: id});
+        break;
+      case "charm":
+        socket.emit("wolfBeautyAction", id);
         break;
     }
     //socket.emit("turnEndedBeforeTimer");
@@ -795,6 +850,24 @@ const roleData = {
       "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
     image: "../RolePicture/Knight.jpeg",
     background: "linear-gradient(45deg,rgb(77, 78, 75),rgb(120, 120, 117))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Merchant: {
+    title: "奇迹商人",
+    description: "好人阵营，神职",
+    ability:
+      "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
+    image: "../RolePicture/Merchant.jpeg",
+    background: "linear-gradient(45deg,rgb(77, 78, 75),rgb(120, 120, 117))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  WolfBeauty: {
+    title: "WolfBeauty",
+    description: "好人阵营，神职",
+    ability:
+      "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
+    image: "../RolePicture/Merchant.jpeg",
+    background: "linear-gradient(45deg,rgb(136, 56, 183),rgb(176, 93, 201))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {

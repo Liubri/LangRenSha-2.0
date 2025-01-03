@@ -9,10 +9,13 @@ export class Player {
       abilities: [],
       seerChecked: false,
       isProtected: false,
+      isPoisoned: false,
       isFlipped: false,
       hasFlipped: false, 
       isAsleep: false,
       isLinked: false,
+      isCharmed: false,
+      isMarkedForElim: null,
       linkedPlayer: null, // Reference to the linked player
       parentId: null, // For the Child role to track its parent
     };
@@ -35,7 +38,23 @@ export class Player {
   }
   
   canPerformAction() {
-    return this.isAlive && !this.state.isAsleep;
+    if (!this.isAlive) {
+      return false;
+    }
+  
+    if (this.state.isAsleep) {
+      return false;
+    }
+  
+    if (this.state.isProtected && this.state.isPoisoned) {
+      this.state.isProtected = false;
+    }
+  
+    if (this.state.isProtected) {
+      return false;
+    }
+  
+    return true;
   }
 
   kill() {

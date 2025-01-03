@@ -8,6 +8,7 @@ import { DreamKeeper } from "./roles/DreamKeeper.js";
 import { Knight } from "./roles/Knight.js";
 import { Merchant } from "./roles/Merchant.js";
 import { Fool } from "./roles/Fool.js";
+import { WolfBeauty } from "./roles/WolfBeauty.js";
 export class Game {
   constructor() {
     this.players = [];
@@ -18,13 +19,22 @@ export class Game {
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
     // this.turnSequence = ["werewolf", "witch", "seer", "vote"];
-    this.turnSequence = ["merchant", "werewolf", "witch", "seer", "vote"];
+    this.turnSequence = ["werewolf", "witch", "seer", "vote"];
     this.werewolvesChoice = [];
     this.finalWolfChoice = null;
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
-    this.availableRoles = [new Witch(), new Werewolf(), new Villager(), new Seer(), new Merchant()];
+    this.dayCount = 0;
+    this.availableRoles = [new Witch(), new Werewolf(), new Villager(), new Seer(), new Werewolf()];
+  }
+  
+  addDayCount() {
+    this.dayCount+=1;
+  }
+  
+  getDayCount() {
+    return this.dayCount;
   }
 
   setFirstTurnNight() {

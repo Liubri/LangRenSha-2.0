@@ -102,6 +102,7 @@ io.on("connection", (socket) => {
   socket.on("updateGameState", ()=> {
     console.log("UpdateGameState called");
     // console.log("UGS: ", game.getCurrentPlayers());
+    const currentDay = game.getDayCount();
     game.getCurrentPlayers().forEach(player => {
       if(player.role.name == "DreamKeeper" && !player.isAlive) {
         const target = game.getCurrentPlayers().filter((player) => player.state.isAsleep)[0];
@@ -114,7 +115,14 @@ io.on("connection", (socket) => {
         player.isAlive = true;
       }
       player.state.abilities = [];
+      
+      if(player.state.isCharmed) {
+        if(player.state.isMarkedForElim == currentDay && player.isAlive) {
+          player.isAlive = false;
+        }
+      }
     });
+    game.addDayCount();
     io.emit("updatePlayers", game.getCurrentPlayers());
     // console.log("UGS Sleep: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
     io.emit("renderButtons");
@@ -330,6 +338,22 @@ io.on("connection", (socket) => {
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn())
     io.emit("renderButtons");
+  });
+  
+  socket.on("wolfBeautyAction", (targetId)=> {
+    const target = game
+    .getCurrentPlayers()
+    .find((player) => player.id === targetId);
+    game.getCurrentPlayers().forEach(player => {
+      if(player.state.isCharmed) {
+        player.state.isCharmed = false;
+        player.state.isMarkedForElim = null;
+      }  
+    });
+    target.state.isCharmed = true;
+    target.state.isMarkedForElim = game.getDayCount() + 1;
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn())
   });
   
   socket.on("updatePlayerFlipped", (targetId) => {
