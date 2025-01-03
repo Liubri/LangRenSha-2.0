@@ -6,6 +6,9 @@ export class Player {
     this.role = role;
     this.isAlive = true;
     this.state = {
+      abilities: [],
+      seerChecked: false,
+      isProtected: false,
       isFlipped: false,
       hasFlipped: false, 
       isAsleep: false,

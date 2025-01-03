@@ -83,18 +83,16 @@
         margin-right: 0.5rem;
       } */
     
-      .no-blur {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    
       #resetButton.hidden {
         display: none;
       }
     
       #resetButton {
         z-index: 5;
+        position: fixed;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
     
     </style>
@@ -208,7 +206,10 @@
       <div class="actions">
         <h2>Game Log</h2>
         <div class="game-log">
-          <p>The game has started. Night falls on the village...</p>
+          <!-- <p>The game has started. Night falls on the village...</p> -->
+          <div id="currentTurnDisplay" class="current-turn">
+           Current Turn: <span id="currentTurnText">N/A</span>
+          </div>
         </div>
       </div>
       <div class="actions">

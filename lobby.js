@@ -35,11 +35,11 @@ socket.on("syncPlayers", (updatedPlayers) => {
     const updatedCurrentPlayer = players.find((p) => p.id === currentPlayer.id);
     if (updatedCurrentPlayer) {
       currentPlayer = updatedCurrentPlayer; // Sync currentPlayer with the updated data
-      console.log("Synced CurrentPlayer", currentPlayer);
+      // console.log("Synced CurrentPlayer", currentPlayer);
     }
   }
-  console.log("Synced Players: ", players);
-})
+  // console.log("Synced Players: ", players);
+});
 
 socket.on("updateGrid", () => {
   renderPlayersGrid();
@@ -63,12 +63,12 @@ socket.on("startGame", () => {
   gameStarted = true;
   // console.log(currentPlayer.role.name);
   // console.log(typeof currentPlayer.role.name);
-  setTimeout(createRoleCard, 1000);
+  // setTimeout(createRoleCard, 1000);
 });
 
 function createRoleCard() {
   createCard(currentPlayer.role.name);
-  createButterflies(); 
+  createButterflies();
 }
 
 function checkIfAlive() {
@@ -98,27 +98,34 @@ socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
   console.log("CurrentTurn:", currentTurn);
   //console.log("CurrentPlayer:", currentPlayer);
-  // const currentTurnText = document.getElementById("currentTurnText");
-  // currentTurnText.textContent = `${currentTurn}`;
+  const currentTurnText = document.getElementById("currentTurnText");
+  currentTurnText.textContent = `${currentTurn}`;
   renderButtons();
-    // Check if the current player is alive
+  // Check if the current player is alive
   //console.log("Role: ", currentPlayer.role.name);
   //console.log("Alive: ", isAlive());
   //console.log("CurrentTurn: ", currentTurn);
-  if(gameStarted) {
-    if (!isAlive() && currentTurn !== "vote" && currentPlayer.role.name.toLowerCase() === currentTurn) {
+  if (gameStarted) {
+    if (
+      !isAlive() &&
+      currentTurn !== "vote" &&
+      currentPlayer.role.name.toLowerCase() === currentTurn
+    ) {
       // Check if there are any alive players before emitting nextTurn
-      const alivePlayersWithRole = players.filter(player => player.isAlive && player.role.name === currentPlayer.role.name);
+      const alivePlayersWithRole = players.filter(
+        (player) =>
+          player.isAlive && player.role.name === currentPlayer.role.name
+      );
       if (alivePlayersWithRole.length > 0) {
         return;
       } else {
         socket.emit("nextTurn");
       }
     }
-    if(currentTurn === "vote") {
+    if (currentTurn === "vote") {
       // console.log("CurrentTurn is voting");
       socket.emit("serverDay");
-      if(currentPlayer.id == 1) {
+      if (currentPlayer.id == 1) {
         socket.emit("updateGameState");
       }
       // console.log("CurrentRole: ", currentPlayer.role.name);
@@ -129,9 +136,9 @@ socket.on("updateCurrentTurn", (newTurn) => {
 
 socket.on("roleActionsDuringVote", () => {
   console.log("CurrentStatus2: ", currentPlayer.isAlive);
-  if(currentPlayer.role.name == "Hunter" && currentPlayer.isAlive == false) {
+  if (currentPlayer.role.name == "Hunter" && currentPlayer.isAlive == false) {
     console.log("HunterFunctionCalled");
-    openModal('shoot');
+    openModal("shoot");
   }
 });
 
@@ -169,7 +176,7 @@ let witchHasMedicine = true;
 let witchHasPoison = true;
 
 socket.on("witchUsedItem", (item) => {
-  if(item == "poison") {
+  if (item == "poison") {
     witchHasPoison = false;
   } else {
     witchHasMedicine = false;
@@ -200,7 +207,10 @@ function renderButtons() {
     button.appendChild(buttonText);
 
     // Add the click event listener
-    button.addEventListener("click", () => openModal(action));
+    button.addEventListener("click", () => {
+      openModal(action);
+      button.disabled = true;
+    });
     return button;
   };
 
@@ -214,55 +224,147 @@ function renderButtons() {
   };
 
   const isVotingPhase = currentTurn === "vote";
-
+  const currPlayerTurn = currentPlayer.role.name.toLowerCase();
   // Only render buttons if the player is alive
   if (isPlayerAlive) {
+    if (currentPlayer.state.abilities.includes("poison")) {
+      actionsDiv.appendChild(
+        createButton(
+          "Poison",
+          "poison",
+          "Mpoison",
+          currentTurn === currPlayerTurn,
+          "zap"
+        )
+      );
+    }
+    if (currentPlayer.state.abilities.includes("seer")) {
+      actionsDiv.appendChild(
+        createButton(
+          "Check",
+          "check",
+          "Mcheck",
+          currentTurn === currPlayerTurn,
+          "eye"
+        )
+      );
+    }
+    if (currentPlayer.state.abilities.includes("guard")) {
+      actionsDiv.appendChild(
+        createButton(
+          "Guard",
+          "guard",
+          "Mguard",
+          currentTurn === currPlayerTurn,
+          "shield"
+        )
+      );
+    }
     if (currentPlayer.role.name === "Werewolf") {
       actionsDiv.appendChild(
-        createButton("Kill", "kill", "kill", currentTurn === "werewolf", "skull")
+        createButton(
+          "Kill",
+          "kill",
+          "kill",
+          currentTurn === "werewolf",
+          "skull"
+        )
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "Witch") {
       actionsDiv.appendChild(
-        createButton("Save", "save", "save", currentTurn === "witch" && witchHasMedicine, "beaker")
+        createButton(
+          "Save",
+          "save",
+          "save",
+          currentTurn === "witch" && witchHasMedicine,
+          "beaker"
+        )
       );
       actionsDiv.appendChild(
-        createButton("Poison", "poison", "poison", currentTurn === "witch" && witchHasPoison, "zap")
+        createButton(
+          "Poison",
+          "poison",
+          "poison",
+          currentTurn === "witch" && witchHasPoison,
+          "zap"
+        )
       );
       actionsDiv.appendChild(createPassTurn(currentTurn === "witch"));
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "Seer") {
       actionsDiv.appendChild(
         createButton("Check", "check", "check", currentTurn === "seer", "eye")
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "Villager") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "Jester") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "Hunter") {
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "DreamKeeper") {
       actionsDiv.appendChild(
-        createButton("Sleep", "sleep", "sleep", currentTurn === "dreamkeeper", "bed")
+        createButton(
+          "Sleep",
+          "sleep",
+          "sleep",
+          currentTurn === "dreamkeeper",
+          "bed"
+        )
       );
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
+    }
+    if (currentPlayer.role.name === "Knight") {
+      actionsDiv.appendChild(
+        createButton("Duel", "duel", "duel", currentTurn != "vote", "shield")
+      );
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
+    }
+    if (currentPlayer.role.name === "Merchant") {
+      actionsDiv.appendChild(
+        createButton("Poison", "poison", "givePoison", currentTurn == "merchant", "skull")
+      );
+      actionsDiv.appendChild(
+        createButton("Check", "check", "giveCheck", currentTurn == "merchant", "eye")
+      );
+      actionsDiv.appendChild(
+        createButton("Guard", "guard", "giveGuard", currentTurn == "merchant", "shield")
+      );
     }
     if (currentPlayer.role.name === "Fool") {
       console.log("isFlipped: ", currentPlayer.state.isFlipped);
-      if(currentPlayer.state.hasFlipped == true) {
+      if (currentPlayer.state.hasFlipped == true) {
         const deadMessage = document.createElement("p");
         deadMessage.textContent = "You cannot perform any actions.";
         actionsDiv.appendChild(deadMessage);
         return;
       }
-      actionsDiv.appendChild(createButton("Vote", "vote", "vote", isVotingPhase, "check-square"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
   } else {
     // If the player is dead, disable all action buttons
@@ -288,10 +390,9 @@ socket.on("toggleButtons", (isEnabled) => {
   toggleButtonsGlobally(isEnabled);
 });
 
-function tButtons() { 
-  socket.emit("toggleAllButtons"); 
+function tButtons() {
+  socket.emit("toggleAllButtons");
 }
-
 
 function renderPlayersGrid() {
   // Render players in the main game screen
@@ -299,8 +400,11 @@ function renderPlayersGrid() {
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
-    console.log('hasFlipped: ${player.name}', player.state.hasFlipped);
-    if(player.state.hasFlipped == true && playerCard.classList.contains("fullFlip")){
+    console.log("hasFlipped: ${player.name}", player.state.hasFlipped);
+    if (
+      player.state.hasFlipped == true &&
+      playerCard.classList.contains("fullFlip")
+    ) {
       playerCard.classList.remove("fullFlip");
     }
     // Add player status (alive or dead)
@@ -328,8 +432,14 @@ function renderPlayersGrid() {
       } else if (currentPlayer.id === player.id) {
         playerRole = player.role.name; // Show the current player's role if not Seer
       } else {
-        if(player.state.isFlipped == true) {
+        if (player.state.isFlipped == true) {
           playerRole = player.role.name;
+        } else if (player.state.seerChecked == true) {
+          if (player.role.alignment === "good") {
+            playerRole = "Good";
+          } else {
+            playerRole = "Bad";
+          }
         } else {
           playerRole = ""; // Hide roles for others when the game is started
         }
@@ -353,12 +463,12 @@ function renderPlayersGrid() {
     if (gameStarted) {
       if (
         currentPlayer.role.name === "Witch" &&
-        wolfVictimId.includes(player.id) &&
+        wolfVictimId == player.id &&
         currentTurn === "witch"
       ) {
         //console.log("Main WitchCSS called");
         playerCard.classList.add("pulse-animation");
-        this.wolfVictimId = [];
+        this.wolfVictimId = null;
       } else {
         //console.log("WitchCurrentTurn:", currentTurn);
         //console.log("Remove animationMain called");
@@ -415,11 +525,39 @@ function openModal(action) {
       break;
     case "shoot":
       modalTitle.textContent = "Choose a Player to Eliminate";
-      actionButton.textContent = "Shoot"
+      actionButton.textContent = "Shoot";
       break;
     case "sleep":
       modalTitle.textContent = "Choose a Player to put to Sleep";
-      actionButton.textContent = "Put to Sleep"
+      actionButton.textContent = "Put to Sleep";
+      break;
+    case "duel":
+      modalTitle.textContent = "Choose a Player to Duel";
+      actionButton.textContent = "Duel";
+      break;
+    case "Mpoison":
+      modalTitle.textContent = "Choose a Player to Poison";
+      actionButton.textContent = "Use Poison Potion";
+      break;
+    case "Mcheck":
+      modalTitle.textContent = "Choose a Player to Check";
+      actionButton.textContent = "Check ID";
+      break;
+    case "Mguard":
+      modalTitle.textContent = "Choose a Player to Guard";
+      actionButton.textContent = "Guard";
+      break;
+    case "givePoison":
+      modalTitle.textContent = "Choose a Player to Give Poison Potion";
+      actionButton.textContent = "Give Potion";
+      break;
+    case "giveCheck":
+      modalTitle.textContent = "Choose a Player to Give Seer Check";
+      actionButton.textContent = "Give Check";
+      break;
+    case "giveGuard":
+      modalTitle.textContent = "Choose a Player to Give Guard Protection";
+      actionButton.textContent = "Give Guard";
       break;
   }
   adjustButtonSizes();
@@ -463,7 +601,7 @@ function getWerewolfColor(werewolfId) {
   return werewolfColors[werewolfId]; // Cycle through colors
 }
 
-let wolfVictimId = [];
+let wolfVictimId = null;
 socket.on("notifyKilled", (wolfChoice) => {
   //console.log("NotifyCalled");
   wolfVictimId = wolfChoice;
@@ -473,7 +611,7 @@ socket.on("notifyKilled", (wolfChoice) => {
 
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
-  const alivePlayers = players.filter(player => player.isAlive);
+  const alivePlayers = players.filter((player) => player.isAlive);
   alivePlayers.forEach((player) => {
     const playerElement = document.createElement("div");
     playerElement.className = `player ${player.isAlive ? "" : "dead"} ${
@@ -497,10 +635,10 @@ function renderPlayersSmallGrid() {
         }
       });
     }
-    if (wolfVictimId.includes(player.id) && currentAction === "save") {
+    if (player.id == wolfVictimId && currentAction === "save") {
       //console.log("Witch CSS called");
       playerElement.classList.add("pulse-animation");
-      this.wolfVictimId = [];
+      this.wolfVictimId = null;
     } else {
       //console.log("Remove animation called");
       playerElement.classList.remove("pulse-animation");
@@ -550,6 +688,27 @@ actionButton.addEventListener("click", () => {
       case "sleep":
         socket.emit("putToSleep", id);
         break;
+      case "duel":
+        socket.emit("knightAction", id);
+        break;
+      case "Mpoison":
+        socket.emit("merchantPoison", id);
+        break;
+      case "Mcheck":
+        socket.emit("merchantCheck", id);
+        break;
+      case "Mguard":
+        socket.emit("merchantGuard", id);
+        break;
+      case "givePoison":
+        socket.emit("merchantAction", { actionType: "poison", targetId: id});
+        break;
+      case "giveCheck":
+        socket.emit("merchantAction", { actionType: "check", targetId: id});
+        break;
+      case "giveGuard":
+        socket.emit("merchantAction", { actionType: "guard", targetId: id});
+        break;
     }
     //socket.emit("turnEndedBeforeTimer");
     this.currentAction = null;
@@ -558,7 +717,7 @@ actionButton.addEventListener("click", () => {
 });
 
 skipVoteButton.addEventListener("click", () => {
-  socket.emit("voterData", { voterId: currentPlayer.id, targetId: 0});
+  socket.emit("voterData", { voterId: currentPlayer.id, targetId: 0 });
   socket.emit("votePlayerOut", { voteType: "skip", targetId: 0 });
   closeModal();
 });
@@ -574,7 +733,6 @@ function passPlayerTurn() {
   closeModal();
 }
 
-
 // Role Card
 const cardContainer = document.querySelector(".card-container");
 const wrapper = document.querySelector(".wrapper");
@@ -583,7 +741,7 @@ const roleData = {
     title: "预言家",
     description: "好人阵营，神职",
     ability: "每晚可以查看一名玩家的身份",
-    image: "../Seer Medium.jpeg",
+    image: "../RolePicture/Seer Medium.jpeg",
     background: "linear-gradient(45deg, #4a0e4e, #81379a)", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
@@ -591,7 +749,7 @@ const roleData = {
     title: "狼人",
     description: "狼人阵营，恶人",
     ability: "每晚可以选择一名玩家进行攻击",
-    image: "../Werewolf.jpeg",
+    image: "../RolePicture/Werewolf.jpeg",
     background: "linear-gradient(45deg, #ff0000, #990000)", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
@@ -600,7 +758,7 @@ const roleData = {
     title: "女巫",
     description: "好人阵营，神职",
     ability: "每晚可以选择一名玩家进行复活或毒死",
-    image: "../Witch.jpeg",
+    image: "../RolePicture/Witch.jpeg",
     background: "linear-gradient(45deg, #3b0e45, #8a6b99)", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
@@ -608,31 +766,42 @@ const roleData = {
     title: "猎人",
     description: "好人阵营，神职",
     ability: "死亡时可以选择开枪射杀一名玩家",
-    image: "../Hunter.jpeg",
+    image: "../RolePicture/Hunter.jpeg",
     background: "linear-gradient(45deg,rgb(132, 139, 55),rgb(181, 201, 34))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   DreamKeeper: {
     title: "摄梦人",
     description: "好人阵营，神职",
-    ability: "每晚选择一名玩家成为梦游者，梦游者免疫夜间伤害且不知道自己在梦游。若摄梦人出局，梦游者也会出局；连续两晚成为梦游者则会出局",
-    image: "../DreamKeeper.jpeg",
+    ability:
+      "每晚选择一名玩家成为梦游者，梦游者免疫夜间伤害且不知道自己在梦游。若摄梦人出局，梦游者也会出局；连续两晚成为梦游者则会出局",
+    image: "../RolePicture/DreamKeeper.jpeg",
     background: "linear-gradient(45deg,rgb(97, 33, 120),rgb(117, 29, 147))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Fool: {
     title: "白痴",
     description: "好人阵营，神职",
-    ability: "被投票出局时翻牌免疫放逐，仅限一次，不能投票但可发言，需狼人击杀才能死亡。",
-    image: "../Fool.jpeg",
+    ability:
+      "被投票出局时翻牌免疫放逐，仅限一次，不能投票但可发言，需狼人击杀才能死亡。",
+    image: "../RolePicture/Fool.jpeg",
     background: "linear-gradient(45deg,rgb(165, 189, 45),rgb(169, 181, 83))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Knight: {
+    title: "Knight",
+    description: "好人阵营，神职",
+    ability:
+      "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
+    image: "../RolePicture/Knight.jpeg",
+    background: "linear-gradient(45deg,rgb(77, 78, 75),rgb(120, 120, 117))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {
     title: "平民",
     description: "好人",
     ability: "无特殊技能",
-    image: "../Villager.jpeg",
+    image: "../RolePicture/Villager.jpeg",
     background: "linear-gradient(45deg, #55b0c6, #9cd9ea)", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
@@ -677,13 +846,11 @@ function startAnimation() {
   cardContainer.classList.remove("hidden");
   cardContainer.style.animation = "slideInFade 1s forwards";
   const abilities = document.querySelector(".card-front .abilities");
-  const characterImage = document.querySelector(
-    ".card-front .character-image"
-  );
+  const characterImage = document.querySelector(".card-front .character-image");
   // Add slide-in animations to the text and image
   abilities.classList.add("slide-text");
   characterImage.classList.add("slide-img");
-  
+
   cardContainer.addEventListener("animationend", (event) => {
     if (event.animationName === "hideCard") {
       // Hide the wrapper once the "hideCard" animation finishes
@@ -701,7 +868,7 @@ function createButterflies() {
   const container = document.querySelector(".card-container");
   // Remove existing butterflies
   const existingButterflies = container.querySelectorAll(".butterfly");
-  existingButterflies.forEach(butterfly => butterfly.remove());
+  existingButterflies.forEach((butterfly) => butterfly.remove());
   for (let i = 0; i < 5; i++) {
     const butterfly = document.createElement("div");
     butterfly.classList.add("butterfly");
@@ -714,10 +881,8 @@ function createButterflies() {
 
 function onHover() {
   const abilities = document.querySelector(".card-front .abilities");
-  const characterImage = document.querySelector(
-    ".card-front .character-image"
-  );
-  if(gameStarted) {
+  const characterImage = document.querySelector(".card-front .character-image");
+  if (gameStarted) {
     abilities.classList.remove("slide-text");
     characterImage.classList.remove("slide-img");
   }
@@ -731,7 +896,6 @@ function hideCard() {
   cardContainer.style.opacity = "0";
   cardContainer.style.animation = "hideCard .5s ease-in-out";
 }
-
 
 function resetGame() {
   gameStarted = false;

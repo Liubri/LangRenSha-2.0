@@ -64,7 +64,7 @@ style.textContent = `
 0% {
 filter: blur(1px);
 }
-80% {
+40% {
 filter: blur(3px);
 }
 90% {

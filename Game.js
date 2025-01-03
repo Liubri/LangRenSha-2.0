@@ -5,6 +5,8 @@ import { Seer } from "./roles/Seer.js";
 import { Hunter } from "./roles/Hunter.js";
 import { Jester } from "./roles/Jester.js";
 import { DreamKeeper } from "./roles/DreamKeeper.js";
+import { Knight } from "./roles/Knight.js";
+import { Merchant } from "./roles/Merchant.js";
 import { Fool } from "./roles/Fool.js";
 export class Game {
   constructor() {
@@ -16,12 +18,18 @@ export class Game {
     this.logs = [];
     this.currentPhase = "lobby"; // 'lobby', 'night', 'day'
     // this.turnSequence = ["werewolf", "witch", "seer", "vote"];
-    this.turnSequence = ["werewolf", "witch", "vote"];
+    this.turnSequence = ["merchant", "werewolf", "witch", "seer", "vote"];
     this.werewolvesChoice = [];
+    this.finalWolfChoice = null;
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
-    this.availableRoles = [new Witch(), new Werewolf(), new Villager(), new Fool()];
+    this.availableRoles = [new Witch(), new Werewolf(), new Villager(), new Seer(), new Merchant()];
+  }
+
+  setFirstTurnNight() {
+    this.currentPhase = "night";
+    this.currentTurnIndex = 0;
   }
   
   assignRole() {
@@ -64,6 +72,7 @@ export class Game {
     this.logs = [];
     this.currentPhase = "lobby"; // Reset to the lobby phase
     this.werewolvesChoice = [];
+    this.finalWolfChoice = null;
     this.currentTurnIndex = 0;
     this.voteMap = new Map();
     this.gameInProgress = false;
@@ -165,6 +174,11 @@ export class Game {
   }
 
   getWolfChoice() {
+    //this returns a int
+    return this.finalWolfChoice;
+  }
+  
+  allWerewolvesChosed() {
     return this.werewolvesChoice;
   }
 
@@ -190,7 +204,8 @@ export class Game {
       .map(([key]) => Number(key)); // Convert keys back to numbers
 
     // Randomly choose one of the candidates if there's a tie
-    return candidates[Math.floor(Math.random() * candidates.length)];
+    this.finalWolfChoice = candidates[Math.floor(Math.random() * candidates.length)];
+    return this.finalWolfChoice;
   }
 
   addWerewolfChoice(int) {
