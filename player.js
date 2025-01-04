@@ -15,6 +15,8 @@ export class Player {
       isAsleep: false,
       isLinked: false,
       isCharmed: false,
+      isSwapped: false,
+      hasSwapped: false,
       isMarkedForElim: null,
       linkedPlayer: null, // Reference to the linked player
       parentId: null, // For the Child role to track its parent
@@ -38,9 +40,9 @@ export class Player {
   }
   
   canPerformAction() {
-    if (!this.isAlive) {
-      return false;
-    }
+    // if (!this.isAlive) {
+    //   return false;
+    // }
   
     if (this.state.isAsleep) {
       return false;

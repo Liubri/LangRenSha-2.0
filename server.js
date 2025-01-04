@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { log } from "console";
 import { clearInterval } from "timers";
-
+import { v4 as uuidv4 } from 'uuid';
 // __dirname equivalent in ES modules
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -59,12 +59,13 @@ function createPreConfig() {
     preConfigRoles.push(new Villager());
   }
 }
-
+let originalIds = null;
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   socket.on("joinGame", (playerName) => {
     const playerRole = game.assignRole();
     const player = new Player(playerName, playerRole);
+    player.uuid = uuidv4();
     game.addPlayer(player);
     io.emit("updatePlayers", game.getCurrentPlayers()); // Broadcast updated players to all clients
     socket.emit("playerJoined", player);
@@ -92,6 +93,13 @@ io.on("connection", (socket) => {
       io.emit("updateCurrentTurn", game.getCurrentTurn());
       io.emit("renderButtons");
       io.emit("setNight");
+      originalIds = game.getCurrentPlayers().map(player => ({
+        id: player.id,
+        uuid: player.uuid,
+        name: player.name,
+        role: player.role,
+      }));
+      // console.log("origianlIds: ", originalIds);
     }
   });
   
@@ -103,13 +111,25 @@ io.on("connection", (socket) => {
     console.log("UpdateGameState called");
     // console.log("UGS: ", game.getCurrentPlayers());
     const currentDay = game.getDayCount();
+    // console.log("OrigianlIds", originalIds);
     game.getCurrentPlayers().forEach(player => {
+      const originalPlayer = originalIds.find(
+        original => original.uuid === player.uuid
+      );
+      if(originalPlayer) {
+        // console.log("BeforeSwitch: ", player);
+        // console.log("originalPlayer: ", originalPlayer);
+        player.id = originalPlayer.id;
+      }
       if(player.role.name == "DreamKeeper" && !player.isAlive) {
         const target = game.getCurrentPlayers().filter((player) => player.state.isAsleep)[0];
         target.isAlive = false;
         // game.getCurrentPlayers().forEach(player => {
         //   player.state.isAsleep = false;
         // });
+      }
+      if(player.role.name == "Merchant" && player.state.isMarkedForElim == currentDay) {
+        player.isAlive = false;
       }
       if(player.role.name == "Merchant" && !player.isAlive && player.state.isAsleep) {
         player.isAlive = true;
@@ -122,6 +142,7 @@ io.on("connection", (socket) => {
         }
       }
     });
+    // console.log("AfterUpdate: ", game.getCurrentPlayers());
     game.addDayCount();
     io.emit("updatePlayers", game.getCurrentPlayers());
     // console.log("UGS Sleep: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
@@ -193,6 +214,18 @@ io.on("connection", (socket) => {
     //   io.emit("winMessage");
     // }
   });
+  
+  socket.on("witchSave", (targetId) => {
+    const target = game
+      .getCurrentPlayers()
+      .find((player) => player.uuid === targetId);
+    if (target) {
+        target.isAlive = true;
+      }
+    game.nextTurn();
+    io.emit("updateCurrentTurn", game.getCurrentTurn());
+    io.emit("updateGrid");
+  });
 
   let buttonsEnabled = false;
   socket.on("toggleAllButtons", () => {
@@ -206,13 +239,16 @@ io.on("connection", (socket) => {
       .find((player) => player.id === targetId);
     if (target) {
       game.addSeerCheckedPlayer(target.id);
+      if(target.state.hasSwapped == true) {
+        target.state.seerChecked = true;
+      }
     }
     // console.log(game.getSeerChecked());
     io.emit("updateSeerChecked", game.getSeerChecked());
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
     io.emit("updateGrid");
-    //io.emit("updatePlayers", game.getCurrentPlayers());
+    // io.emit("updatePlayers", game.getCurrentPlayers());
   });
   
   socket.on("hunterAction", (targetId) => {
@@ -240,11 +276,13 @@ io.on("connection", (socket) => {
     const target = game
       .getCurrentPlayers()
       .find(
-        (player) => player.id === game.tallyWerewolfChoice() && player.isAlive
-      );
+        (player) => player.id === game.tallyWerewolfChoice());
     if (game.allWerewolvesChosed().length === game.getWerewolves().length) {
-      io.emit("notifyKilled", game.getWolfChoice());
-      console.log("Type of wwTarget: ", typeof target);
+      const victim = game
+      .getCurrentPlayers()
+      .find(
+        (player) => player.id === game.getWolfChoice());
+      io.emit("notifyKilled", victim.uuid);
       target.kill();
       game.clearWolfChoice();
       game.nextTurn();
@@ -269,18 +307,12 @@ io.on("connection", (socket) => {
         player.state.isAsleep = false;
       }
     });
-    // if(target.state.isAsleep) {
-    //   target.isAlive = false;
-    // } else {
-    //   target.state.isAsleep = true;
-    // }
-    console.log("SleepTargets: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
+    // console.log("SleepTargets: ", game.getCurrentPlayers().filter((player) => player.state.isAsleep));
     game.nextTurn();
     io.emit("updateCurrentTurn", game.getCurrentTurn());
   });
 
   socket.on("knightAction", (targetId) => {
-    console.log("Knight Action called");
     const target = game
     .getCurrentPlayers()
     .find((player) => player.id === targetId);
@@ -327,12 +359,22 @@ io.on("connection", (socket) => {
     const target = game
     .getCurrentPlayers()
     .find((player) => player.id === targetId);
-    if(actionType == "poison") {
-      target.state.abilities.push("poison");
-    } else if(actionType == "guard") {
-      target.state.abilities.push("guard");
+    if(target.role.alignment == "good") {
+      if(actionType == "poison") {
+        target.state.abilities.push("poison");
+      } else if(actionType == "guard") {
+        target.state.abilities.push("guard");
+      } else {
+        target.state.abilities.push("check");
+      }
     } else {
-      target.state.abilities.push("check");
+      const merchant = game
+      .getCurrentPlayers()
+      .find((player) => player.role.name === "Merchant");      
+      if(!merchant.isMarked) {
+        merchant.state.isMarkedForElim = game.getDayCount() + 1;
+        merchant.isMarked = true;
+      }
     }
     io.emit("syncPlayers", game.getCurrentPlayers());
     game.nextTurn();
@@ -356,15 +398,45 @@ io.on("connection", (socket) => {
     io.emit("updateCurrentTurn", game.getCurrentTurn())
   });
   
+  socket.on("magicianAction", (targetIds) => {
+    const player1 = game
+    .getCurrentPlayers()
+    .find((player) => player.id === targetIds[0]);
+    const player2 = game
+    .getCurrentPlayers()
+    .find((player) => player.id === targetIds[1]);
+    [player1.id, player2.id] = [player2.id, player1.id];
+    // io.emit("syncPlayers", game.getCurrentPlayers());
+    // console.log("magicianPlayers: ", game.getCurrentPlayers());
+    game.nextTurn();
+    io.emit("updateSwapped", { 
+      originalIds: [targetIds[0], targetIds[1]], 
+      swappedIds: [player2.id, player1.id] 
+    });
+    player1.state.isSwapped = true;
+    player2.state.isSwapped = true;
+    player1.state.swappedRole = player2.role.alignment;
+    player2.state.swappedRole = player1.role.alignment;
+    io.emit("updateCurrentTurn", game.getCurrentTurn())
+  });
+  
   socket.on("updatePlayerFlipped", (targetId) => {
     const target = game
     .getCurrentPlayers()
     .find((player) => player.id === targetId);
-    game.getCurrentPlayers().forEach(player => {
-      if(player.id === target.id) {
-        target.state.hasFlipped = true
-      }
-    });
+    if(target) {
+      target.state.hasFlipped = true
+    }
+    // console.log("updatePlayerFlipped: ", game.getCurrentPlayers().filter((player) => player.state.hasFlipped));
+  });
+  
+  socket.on("updatePlayerSwapped", (targetId) => {
+    const target = game
+    .getCurrentPlayers()
+    .find((player) => player.id === targetId);
+    if(target) {
+      target.state.hasSwapped = true;
+    }
     // console.log("updatePlayerFlipped: ", game.getCurrentPlayers().filter((player) => player.state.hasFlipped));
   });
   
@@ -406,7 +478,12 @@ io.on("connection", (socket) => {
           target.state.isFlipped = true;
           target.isAlive = true;
           // io.emit("revealRole", target.id);
-        } else {
+        } else if (target && target.role.name === "WolfBeauty" && target.state.isFlipped == false) {
+          target.state.isFlipped = true;
+          let charmedTarget = game.getCurrentPlayers().find((player) => player.state.isCharmed == true);
+          charmedTarget.isAlive = false;
+        }
+          else {
           endMessage();
         }
         game.nextTurn();

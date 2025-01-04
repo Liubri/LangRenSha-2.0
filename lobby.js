@@ -5,14 +5,18 @@ let currentPlayer = null;
 let currentTurn = "";
 const mainPlayerGrid = document.getElementById("mainPlayerGrid");
 
-// Example players array for demonstration
-const playersHardCoded = [
-  { id: 1, name: "Unknown", role: "Werewolf", isAlive: true },
-  { id: 2, name: "Player 2", role: "Villager", isAlive: true },
-  // Add more players as needed
-];
-// players = playersHardCoded;
-// renderPlayersGrid();
+socket.on("updateSwapped", ({ originalIds, swappedIds }) => {
+  const player1 = players.find(player => player.id === originalIds[0]);
+  const player2 = players.find(player => player.id === originalIds[1]);
+
+  if (player1 && player2) {
+    player1.state.isSwapped = true;
+    player2.state.isSwapped = true;
+    player1.state.swappedRole = player2.role.alignment;
+    player2.state.swappedRole = player1.role.alignment;
+  }
+  // console.log("updateSwapped: ", players);
+});
 socket.on("updatePlayers", (updatedPlayers) => {
   players = updatedPlayers; // Update the players array
   if (currentPlayer) {
@@ -23,16 +27,12 @@ socket.on("updatePlayers", (updatedPlayers) => {
   }
   //console.log("Updated Players:", players);
   renderPlayersGrid(); // Render the updated player grid
-  // if (gameStarted) {
-  //   checkIfAlive();
-  // }
-  //checkStartGame();
 });
 
 socket.on("syncPlayers", (updatedPlayers) => {
   players = updatedPlayers;
   if (currentPlayer) {
-    const updatedCurrentPlayer = players.find((p) => p.id === currentPlayer.id);
+    const updatedCurrentPlayer = players.find((p) => p.uuid === currentPlayer.uuid);
     if (updatedCurrentPlayer) {
       currentPlayer = updatedCurrentPlayer; // Sync currentPlayer with the updated data
       // console.log("Synced CurrentPlayer", currentPlayer);
@@ -63,7 +63,7 @@ socket.on("startGame", () => {
   gameStarted = true;
   // console.log(currentPlayer.role.name);
   // console.log(typeof currentPlayer.role.name);
-  // setTimeout(createRoleCard, 1000);
+  setTimeout(createRoleCard, 1000);
 });
 
 function createRoleCard() {
@@ -71,28 +71,9 @@ function createRoleCard() {
   createButterflies();
 }
 
-function checkIfAlive() {
-  const currentPlayerInList = players.find(
-    (player) => player.id === currentPlayer.id
-  );
-  if (currentPlayerInList) {
-    if (!currentPlayerInList.isAlive) {
-      currentPlayer.isAlive = false; // Update currentPlayer status
-      // console.log(`${currentPlayer.name} is now dead.`);
-    }
-  }
-}
-
 function isAlive() {
   return currentPlayer.isAlive;
 }
-
-// function checkStartGame() {
-//   if (players.length == 3 && !gameStarted) {
-//     gameStarted = true;
-//     socket.emit("startGame");
-//   }
-// }
 
 socket.on("updateCurrentTurn", (newTurn) => {
   currentTurn = newTurn;
@@ -123,13 +104,10 @@ socket.on("updateCurrentTurn", (newTurn) => {
       }
     }
     if (currentTurn === "vote") {
-      // console.log("CurrentTurn is voting");
       socket.emit("serverDay");
       if (currentPlayer.id == 1) {
         socket.emit("updateGameState");
       }
-      // console.log("CurrentRole: ", currentPlayer.role.name);
-      // console.log("CurrentStatus: ", currentPlayer.isAlive);
     }
   }
 });
@@ -353,6 +331,9 @@ function renderButtons() {
       actionsDiv.appendChild(
         createButton("Guard", "guard", "giveGuard", currentTurn == "merchant", "shield")
       );
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
     }
     if (currentPlayer.role.name === "WolfBeauty") {
       actionsDiv.appendChild(
@@ -362,8 +343,17 @@ function renderButtons() {
         createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
       );
     }
+    if (currentPlayer.role.name === "Magician") {
+      actionsDiv.appendChild(
+        createButton("Switch", "switch", "switch", currentTurn == "magician", "rabbit")
+      );
+      actionsDiv.appendChild(createPassTurn(currentTurn === "magician"));
+      actionsDiv.appendChild(
+        createButton("Vote", "vote", "vote", isVotingPhase, "check-square")
+      );
+    }
     if (currentPlayer.role.name === "Fool") {
-      console.log("isFlipped: ", currentPlayer.state.isFlipped);
+      // console.log("isFlipped: ", currentPlayer.state.isFlipped);
       if (currentPlayer.state.hasFlipped == true) {
         const deadMessage = document.createElement("p");
         deadMessage.textContent = "You cannot perform any actions.";
@@ -408,7 +398,7 @@ function renderPlayersGrid() {
   mainPlayerGrid.innerHTML = "";
   players.forEach((player) => {
     const playerCard = document.createElement("div");
-    console.log("hasFlipped: ${player.name}", player.state.hasFlipped);
+    // console.log("hasFlipped: ${player.name}", player.state.hasFlipped);
     if (
       player.state.hasFlipped == true &&
       playerCard.classList.contains("fullFlip")
@@ -423,37 +413,15 @@ function renderPlayersGrid() {
     }
     // Determine player role visibility
     let playerRole;
-    if (gameStarted) {
-      if (currentPlayer.role.name === "Seer") {
-        console.log("SeerChecked", seerCheckedPlayers);
-        if (seerCheckedPlayers.includes(player.id)) {
-          if (player.role.alignment === "good") {
-            playerRole = "Good";
-          } else {
-            playerRole = "Bad";
-          }
-        } else if (currentPlayer.id === player.id) {
-          playerRole = player.role.name; // Show the current player's role
-        } else {
-          playerRole = ""; // Hide roles for others
-        }
-      } else if (currentPlayer.id === player.id) {
-        playerRole = player.role.name; // Show the current player's role if not Seer
-      } else {
-        if (player.state.isFlipped == true) {
-          playerRole = player.role.name;
-        } else if (player.state.seerChecked == true) {
-          if (player.role.alignment === "good") {
-            playerRole = "Good";
-          } else {
-            playerRole = "Bad";
-          }
-        } else {
-          playerRole = ""; // Hide roles for others when the game is started
-        }
-      }
+    if (!gameStarted) {
+      playerRole = "Role hidden"; // Before the game starts
+    } else if (currentPlayer.id === player.id) {
+      // Always show the current player's role
+      playerRole = player.role.name;
+    } else if (currentPlayer.role.name === "Seer") {
+      playerRole = getSeerPlayerRole(player, seerCheckedPlayers);
     } else {
-      playerRole = "Role hidden"; // Before the game starts, show "Role hidden"
+      playerRole = getNonSeerPlayerRole(player);
     }
 
     // Set the innerHTML for the player card
@@ -471,7 +439,7 @@ function renderPlayersGrid() {
     if (gameStarted) {
       if (
         currentPlayer.role.name === "Witch" &&
-        wolfVictimId == player.id &&
+        wolfVictimId == player.uuid &&
         currentTurn === "witch"
       ) {
         //console.log("Main WitchCSS called");
@@ -487,6 +455,34 @@ function renderPlayersGrid() {
     mainPlayerGrid.appendChild(playerCard);
   });
   lucide.createIcons();
+}
+
+function getSeerPlayerRole(player, seerCheckedPlayers) {
+  if (seerCheckedPlayers.includes(player.id)) {
+    if (player.state.isSwapped && !player.state.hasSwapped && !player.state.seerChecked) {
+      // First swap check
+      player.state.hasSwapped = true;
+      socket.emit("updatePlayerSwapped", player.id);
+      return player.state.swappedRole === "good" ? "Good" : "Bad";
+    } else if (player.state.hasSwapped && !player.state.seerChecked) {
+      // After first swap
+      return player.state.swappedRole === "good" ? "Good" : "Bad";
+    } else {
+      return player.role.alignment === "good" ? "Good" : "Bad";
+    }
+  }
+  return ""; // Hide roles for others
+}
+
+function getNonSeerPlayerRole(player) {
+  if (player.state.isFlipped) {
+    return player.role.name;
+  } else if (player.state.seerChecked) {
+    return player.role.alignment === "good" ? "Good" : "Bad";
+  } else if (player.state.isCharmed && !player.isAlive) {
+    return "Charmed";
+  }
+  return ""; // Hide roles for others when the game is started
 }
 
 //This is for the modal
@@ -571,6 +567,11 @@ function openModal(action) {
       modalTitle.textContent = "Choose a Player to Charm";
       actionButton.textContent = "Charm";
       break;
+    case "switch":
+      modalTitle.textContent = "Choose two Players to Switch IDs";
+      actionButton.textContent = "Switch";
+      cancelSkill.classList.remove("hidden");
+      break;
   }
   adjustButtonSizes();
   renderPlayersSmallGrid();
@@ -623,7 +624,9 @@ socket.on("notifyKilled", (wolfChoice) => {
 
 function renderPlayersSmallGrid() {
   playersGrid.innerHTML = "";
-  const alivePlayers = players.filter((player) => player.isAlive);
+  const alivePlayers = currentPlayer.role.name === "Magician"
+    ? players.filter((player) => player.isAlive && player.state.isSwapped === false)
+    : players.filter((player) => player.isAlive);
   alivePlayers.forEach((player) => {
     const isSelected = selectedPlayers.includes(player.id);
     const playerElement = document.createElement("div");
@@ -648,7 +651,7 @@ function renderPlayersSmallGrid() {
         }
       });
     }
-    if (player.id == wolfVictimId && currentAction === "save") {
+    if (player.uuid == wolfVictimId && currentAction === "save") {
       //console.log("Witch CSS called");
       playerElement.classList.add("pulse-animation");
       this.wolfVictimId = null;
@@ -665,8 +668,12 @@ function renderPlayersSmallGrid() {
 }
 
 function selectPlayer(playerId) {
-  const selectionLimit = getSelectionLimitByRole(currentPlayer.role.name);
-  
+  let selectionLimit = null;
+  if(currentTurn != "vote") {
+    selectionLimit = getSelectionLimitByRole(currentPlayer.role.name);
+  } else {
+    selectionLimit = 1;
+  }
   if (selectedPlayers.includes(playerId)) {
     // If the player is already selected, deselect them
     selectedPlayers = selectedPlayers.filter((id) => id !== playerId);
@@ -704,6 +711,7 @@ function getSelectionLimitByRole(roleName) {
     Seer: 1,
     AwakenedSeer: 2,
     Witch: 1,
+    Magician: 2,
     // Add more roles and limits here
   };
   return roleLimits[roleName] || 1; // Default to 1 if the role isn't listed
@@ -716,7 +724,8 @@ actionButton.addEventListener("click", () => {
     //   const { id } = players.find((player) => player.id === playerId);
     //   return id;
     // });
-    const { id } = players.find((player) => player.id === selectedPlayers[0]);
+    const selectedPlayer = players.find((player) => player.id === selectedPlayers[0]);
+    const {id, uuid} = selectedPlayer;
     switch (currentAction) {
       case "vote":
         socket.emit("voterData", { voterId: currentPlayer.id, targetId: id });
@@ -729,7 +738,7 @@ actionButton.addEventListener("click", () => {
         socket.emit("witchAction", { actionType: "poison", targetId: id });
         break;
       case "save":
-        socket.emit("witchAction", { actionType: "save", targetId: id });
+        socket.emit("witchSave", uuid);
         break;
       case "check":
         socket.emit("seerAction", id);
@@ -763,6 +772,9 @@ actionButton.addEventListener("click", () => {
         break;
       case "charm":
         socket.emit("wolfBeautyAction", id);
+        break;
+      case "switch":
+        socket.emit("magicianAction", selectedPlayers);
         break;
     }
     //socket.emit("turnEndedBeforeTimer");
@@ -844,7 +856,7 @@ const roleData = {
     borderColor: "solid 4px #fcbcb2",
   },
   Knight: {
-    title: "Knight",
+    title: "骑士",
     description: "好人阵营，神职",
     ability:
       "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
@@ -856,18 +868,26 @@ const roleData = {
     title: "奇迹商人",
     description: "好人阵营，神职",
     ability:
-      "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
+      "奇迹商人在每夜第一个行动，选择一名其他玩家成为幸运儿，使其获得三个一次性技能中的一个：预言家的查验、女巫的毒药或守卫的守护，每局游戏限一次. 若幸运儿是狼人，则幸运儿不会获得技能，且次日奇迹商人出局",
     image: "../RolePicture/Merchant.jpeg",
     background: "linear-gradient(45deg,rgb(77, 78, 75),rgb(120, 120, 117))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   WolfBeauty: {
-    title: "WolfBeauty",
-    description: "好人阵营，神职",
+    title: "狼美人",
+    description: "狼人阵营，恶人",
     ability:
-      "骑士可以在白天警长竞选结束后，放逐投票之前，随时翻牌决斗场上除自己以外的任意一位玩家。如果被决斗的玩家是狼人，则该狼人死亡并立即进入黑夜；如果被决斗的玩家是好人，则骑士死亡并继续进行白天原本的发言流程",
-    image: "../RolePicture/Merchant.jpeg",
+      "狼美人在夜里可以魅惑一人，天亮后，如果狼美人被放逐出局或者被猎人射杀，被魅惑的玩家跟随狼美人一起出局，且无技能",
+    image: "../RolePicture/WolfBeauty.jpeg",
     background: "linear-gradient(45deg,rgb(136, 56, 183),rgb(176, 93, 201))", // Adjust colors as needed
+    borderColor: "solid 4px #fcbcb2",
+  },
+  Magician: {
+    title: "魔术师",
+    description: "好人阵营，神职",
+    ability:"每晚在其他所有人之前行动, 交换2个人的号码牌, 当晚有效",
+    image: "../RolePicture/Magician.jpeg",
+    background: "linear-gradient(45deg,rgb(86, 104, 111),rgb(109, 158, 153))", // Adjust colors as needed
     borderColor: "solid 4px #fcbcb2",
   },
   Villager: {
