@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="../playerGrid.css" />
-    <link rel="stylesheet" href="../modal.css" />
-    <link rel="stylesheet" href="../voteSummary.css" />
-    <link rel="stylesheet" href="../endGameText.css">
-    <link rel="stylesheet" href="../timer.css">
-    <link rel="stylesheet" href="../sun.css">
-    <link rel="stylesheet" href="../roleCard.css">
-    <link rel="stylesheet" href="../login.css">
+    <link rel="stylesheet" href="../css/playerGrid.css" />
+    <link rel="stylesheet" href="../css/modal.css" />
+    <link rel="stylesheet" href="../css/voteSummary.css" />
+    <link rel="stylesheet" href="../css/endGameText.css">
+    <link rel="stylesheet" href="../css/timer.css">
+    <link rel="stylesheet" href="../css/sun.css">
+    <link rel="stylesheet" href="../css/roleCard.css">
+    <link rel="stylesheet" href="../css/login.css">
     <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet">
     <style>
       body {
@@ -273,10 +273,10 @@
         <button onclick="resetGame()" id="resetButton" class="hidden">resetGame</button>
       </div>
     <script src="../login.js"></script>
-    <script src="../lobby.js"></script>
-    <script src="../voteDisplay.js"></script>
+    <script src="../game/lobby.js"></script>
+    <script src="../game/voteDisplay.js"></script>
     <script src="../timer.js"></script>
-    <script src="../endGameText.js"></script>
+    <script src="../game/endGameText.js"></script>
     <script>
       socket.on("setNight",() => {
         setNightState();

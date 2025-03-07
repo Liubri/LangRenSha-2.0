@@ -2,8 +2,8 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
-import { Game } from "./Game.js"; // Use .js extension for local modules
-import { Player } from "./player.js";
+import { Game } from "./game/Game.js"; // Use .js extension for local modules
+import { Player } from "./game/player.js";
 
 
 const app = express();

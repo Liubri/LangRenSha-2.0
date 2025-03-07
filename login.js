@@ -17,8 +17,6 @@ function handleJoinRoom() {
   if (lobby) {
     lobby.classList.remove("hidden");
   }
-  // Create a player object
-  //const player = { id: 1, name: playerName, role: "Villager", isAlive: true };
 
   // Emit the player data to the server
   socket.emit("joinGame", playerName);

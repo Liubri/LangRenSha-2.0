@@ -1,6 +1,6 @@
 // Import necessary classes
 import { Player } from './Player.js'; // Assuming Player.js is in the same folder
-import { Villager } from './roles/Villager.js'; // Assuming Villager.js is in the same folder
+import { Villager } from '../roles/Villager.js'; // Assuming Villager.js is in the same folder
 import { Game} from './Game.js';
 
 const playerName = 'John Doe'; // Example player name
